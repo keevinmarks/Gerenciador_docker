@@ -1,0 +1,53 @@
+version: '3.8' # Versão do Docker Compose
+
+services:
+  # Serviço do Banco de Dados MySQL
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: idam13579 # Troque por uma senha forte
+      MYSQL_DATABASE: manager_system # O nome do seu banco de dados
+    ports:
+      # Mapeia a porta 3306 do container para a 3307 da sua máquina
+      # Use 3307 para não conflitar com um possível MySQL local
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql # Volume para persistir os dados do banco
+      - ./mysql-init:/docker-entrypoint-initdb.d
+
+  # Serviço da API Backend (Node.js)
+  api:
+    build:
+      context: ./BackEnd # Onde está o Dockerfile da API
+    container_name: node_api
+    restart: unless-stopped
+    depends_on:
+      - db # Garante que o banco de dados inicie antes da API
+    ports:
+      - "3001:3001" # Mapeia a porta 3001 do container para a 3001 da sua máquina
+    environment:
+      DB_HOST: db # IMPORTANTE: O host é o nome do serviço 'db' acima
+      DB_USER: root
+      DB_PASSWORD: idam13579 # Use a mesma senha definida no serviço 'db'
+      DB_NAME: manager_system # Use o mesmo nome de banco definido no serviço 'db'
+      # Adicione outras variáveis de ambiente que sua API precisar
+
+  # Serviço do Cliente Frontend (React)
+  client:
+    build:
+      context: ./FrontEnd # Onde está o Dockerfile do React
+      args:
+        # Passa a URL da API como um argumento de build para o Dockerfile do frontend
+        NEXT_PUBLIC_API_URL: http://localhost:3001
+    container_name: react_client
+    restart: unless-stopped
+    ports:
+      - "3000:3000" # Mapeia a porta 80 do Nginx (container) para a 3000 da sua máquina
+    environment:
+      # Definindo o valor diretamente aqui
+      JWT_SECRET: "2F1E19C22892CDD0CC4A834C6B95A6CE"
+
+volumes:
+  db_data: # Define o volume nomeado para persistência do banco
