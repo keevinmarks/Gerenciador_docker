@@ -23,8 +23,8 @@ const ButtonLogoff = () => {
   return (
     <button
       onClick={handleLogoff}
-      className="bg-gradient-to-r from-sky-400 to-blue-500 
-                 hover:from-sky-500 hover:to-blue-600 
+      className="bg-gradient-to-r from-sky-400 to-blue-400
+                 hover:from-sky-500 hover:to-blue-400 
                  text-white font-semibold py-2 px-6 
                  rounded-lg shadow-md 
                  hover:shadow-lg 

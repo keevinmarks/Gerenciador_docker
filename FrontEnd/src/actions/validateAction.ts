@@ -26,7 +26,7 @@ const validateUser = async ({name, password}: User) => {
             });
             redirect("/system/computers");
         }else{
-            return {message: "chama", success: false}
+            return {message: jsonResp.message, success: false}
         }
     }catch(error){
         if(isRedirectError(error)){
