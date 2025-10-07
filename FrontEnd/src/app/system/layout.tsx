@@ -117,6 +117,13 @@ const Layout = ({ children }: Props) => {
                     >
                       🛜 Maquina na Rede
                     </Link>
+                    <Link
+                      href="/historicodoscomputadores"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition"
+                    >
+                      📋 Historico de Computadores
+                    </Link>
                   </div>
 
                   {/* Logout */}
