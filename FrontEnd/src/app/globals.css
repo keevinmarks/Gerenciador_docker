@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+/* ============================= */
+/* Variáveis de Tema (Claro/Escuro) */
+/* ============================= */
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+
+  --primary: #2563eb;   /* Azul padrão Tailwind (blue-600) */
+  --secondary: #64748b; /* Slate-500 */
+  --accent: #0ea5e9;    /* Cyan-500 */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+
+  --font-sans: var(--font-geist-sans, ui-sans-serif, system-ui);
+  --font-mono: var(--font-geist-mono, ui-monospace, monospace);
+}
+
+/* ============================= */
+/* Tema Escuro automático */
+/* ============================= */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --primary: #3b82f6;   /* Azul mais claro no dark */
+    --secondary: #94a3b8; /* Slate-400 */
+    --accent: #22d3ee;    /* Cyan-400 */
+  }
+}
+
+/* ============================= */
+/* Reset global e estilos base */
+/* ============================= */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================= */
+/* Correção para inputs com autofill (Chrome/Edge) */
+/* ============================= */
+input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px var(--background) inset !important;
+  -webkit-text-fill-color: var(--foreground) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* ============================= */
+/* Scrollbar personalizada */
+/* ============================= */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--secondary);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+  box-shadow: 0 0 0 30px white inset !important;
+  -webkit-text-fill-color: black !important
+}
