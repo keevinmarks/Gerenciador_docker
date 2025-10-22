@@ -3,14 +3,19 @@ import { Computer } from "@/types/types"
 import { Pencil, Trash } from "lucide-react"
 import { useState } from "react"
 import ModalComputer from "./ModalComputer"
+import ModalDelete from "./ModalDelete"
 type Props = {
     modalUpdate: () => void;
     computer:Computer;
 }
 const ComputerItem = ({computer, modalUpdate}:Props) => {
+    const [modalDelete, setModalDelete] = useState<boolean>(false);
     const [modalEdit, setModalEdit] = useState<boolean>(false)
     const handleEdit = () => {
         setModalEdit(true);
+    }
+    const handleDelete = () => {
+        setModalDelete(true);
     }
     const setDeleteId = (id:number) => {
         if(confirm(`Tem certeza que deseja deletar o computador de id: ${id} ?`)){
@@ -55,13 +60,14 @@ const ComputerItem = ({computer, modalUpdate}:Props) => {
                 <Pencil className="w-5 h-5 text-blue-600" />
             </button>
             <button
-                onClick={() => setDeleteId(computer.id_computer as number)}
+                onClick={handleDelete}
                 className="p-2 rounded-full hover:bg-red-100"
             >
                 <Trash className="w-5 h-5 text-red-600" />
             </button>
             </td>
             {modalEdit && <ModalComputer isEditing={true} computer={computer} setModalEdit={setModalEdit} updateComputerList={modalUpdate}/>}
+            {modalDelete && <ModalDelete computer_id={computer.id_computer as number} showModal={setModalDelete} updateList={modalUpdate}/>}
         </tr>
     )
 }

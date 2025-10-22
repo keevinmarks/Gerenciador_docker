@@ -27,7 +27,7 @@ CREATE TABLE `computers` (
   `name_computer` varchar(30) NOT NULL,
   `type_computer` varchar(20) NOT NULL,
   `mac_computer` varchar(30) NOT NULL,
-  `asset_number` int(11) NOT NULL,
+  `asset_number` BIGINT UNSIGNED NOT NULL,
   `status_computer` tinyint(1) NOT NULL,
   `exit_date` date NULL DEFAULT NULL,
   `reason` text NOT NULL,

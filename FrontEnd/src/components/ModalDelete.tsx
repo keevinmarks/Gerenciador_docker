@@ -1,13 +1,20 @@
+import { deleteComputer } from "@/actions/computersAction";
+
 type Props = {
-    showModal: (value:boolean) => void;
-    computer_id: number;
+  updateList: () => void;
+  showModal: (value:boolean) => void;
+  computer_id: number;
 }
-const ModalDeltete = ({showModal, computer_id}:Props) => {
+const ModalDeltete = ({showModal, computer_id, updateList}:Props) => {
 
     const handleDelete = async () => {
-        // Chamar a API para deletar o computador
+      await deleteComputer(computer_id);
+      await updateList();
+      showModal(false);
     }
-
+    const handleCancel = () => {
+      showModal(false);
+    }
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
@@ -23,14 +30,14 @@ const ModalDeltete = ({showModal, computer_id}:Props) => {
             </p>
             <div className="flex justify-end gap-3">
               <button
-                onClick={() => showModal(false)}
-                className="px-4 py-2 border rounded-md text-black"
+                onClick={handleCancel}
+                className="px-4 py-2 border rounded-md text-black cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 font-medium transition-colors"
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 font-medium transition-colors cursor-pointer"
               >
                 Excluir
               </button>

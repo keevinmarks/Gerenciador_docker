@@ -70,13 +70,15 @@ usersRouter.post("/validate", async (req, res) => {
             user_name,
             level_user
         }
-        
+        console.log(payload);
         const secret = process.env.JWT_SECRET;
+        //console.log(secret);
         if(!secret){
             return res.status(500).json({message: "Erro no servidor", success: false});
         }
 
         const token = jwt.sign(payload, secret, {expiresIn: "3h"});
+        console.log(token);
         
         //Dando as respostas:
         if(reset_password){

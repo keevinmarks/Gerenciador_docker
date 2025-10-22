@@ -53,7 +53,9 @@ const ModalComputer = ({setShowModal, isEditing, computer, setModalEdit, updateC
 
         await insertComputer(computer);
         await updateComputerList();
-        alert("Computador cadastrado com sucesso");
+        if(setShowModal){
+          setShowModal(false);
+        }
       }else{
         const computer:Computer = {
           id_computer: idComputer as number,
@@ -79,7 +81,9 @@ const ModalComputer = ({setShowModal, isEditing, computer, setModalEdit, updateC
 
         await updateComputers(computer);
         await updateComputerList();
-        alert("Computador atualizado com sucesso");
+        if(setModalEdit){
+          setModalEdit(false);
+        }
       }
         
     }
