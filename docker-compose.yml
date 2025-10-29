@@ -49,6 +49,7 @@ services:
     environment:
       # Definindo o valor diretamente aqui
       JWT_SECRET: "2F1E19C22892CDD0CC4A834C6B95A6CE"
+      NODE_ENV: "development"
 
 volumes:
   db_data: # Define o volume nomeado para persistência do banco

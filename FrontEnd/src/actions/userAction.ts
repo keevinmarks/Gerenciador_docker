@@ -20,7 +20,7 @@ export const validateUser = async ({name, password}: User) => {
             const cookieStore = await cookies();
             cookieStore.set("authToken", jsonResp.token, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
+                secure: false,//process.env.NODE_ENV === "production",
                 path: "/",
                 maxAge: 60 * 60 * 3
             });

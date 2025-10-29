@@ -25,6 +25,7 @@ export const middleware = async (request: NextRequest) => {
     //Verificando se o token existe
     if(!token){
         //Passando uma ulr absoluta e não relativa
+        console.log("Token não existe");
         return NextResponse.redirect(new URL("/", request.url));
     }
 
@@ -32,6 +33,7 @@ export const middleware = async (request: NextRequest) => {
         //Verificando a validade do token:
         await jwtVerify(token, getSecret());
 
+        console.log("Redirecionando para próxima página");
         //Permite acesso a página:
         return NextResponse.next();
     }catch(error){
