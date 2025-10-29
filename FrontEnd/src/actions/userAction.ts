@@ -6,7 +6,7 @@ type User = {
     name:string;
     password: string;
 }
-const validateUser = async ({name, password}: User) => {
+export const validateUser = async ({name, password}: User) => {
     try{
         const res = await fetch("http://api:3001/users/validate", {
             method: "POST",
@@ -36,4 +36,36 @@ const validateUser = async ({name, password}: User) => {
         return {message: "Erro de conexão com a API" + error, success: false }
     }
 }
-export default validateUser;
+
+export const getUsers = async () => {
+    try{
+
+        const cookieStore = await cookies();
+
+        const token = cookieStore.get("authToken")?.value;
+
+        const headers = {
+            "Content-type": "application/json",
+            "Authorization": ""
+        };
+
+        if(token){
+            headers["Authorization"] = `Bearer ${token}`;
+        }else{
+            console.log("Nenhum token de autorização encontrado");
+        }
+
+        const resp = await fetch("http://api:3001/users", {
+            method: "GET",
+            headers: headers,
+            cache: "no-store"
+        })
+
+        const jsonResp = await resp.json();
+        console.log(jsonResp);
+        return jsonResp.data;
+    }catch(error){
+        console.log("Erro ao buscar usuários: " + error);
+        return {message: "Erro ao buscar usuários: " + error, success: false }
+    }
+}

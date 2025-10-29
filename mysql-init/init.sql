@@ -55,9 +55,11 @@ DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `user_name` varchar(50) NOT NULL,
+  `email_user` varchar(100) NOT NULL,
   `position` varchar(50) NOT NULL,
   `level_user` tinyint(3) unsigned NOT NULL,
   `password_user` varchar(255) NOT NULL,
+  `status_user` tinyint(1) NOT NULL DEFAULT 0,
   `registration_date` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
   `reset_password` tinyint(1) NOT NULL DEFAULT 0,
@@ -72,7 +74,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Administrador','Administrador',2,'$2b$10$cgXznwWXzPJYfhzucYvurezYsccCUgUnJAOkyX4ZCB61bScE6fpqO','2025-09-01 15:38:15',NULL,0,NULL);
+INSERT INTO `users` VALUES (1,'Administrador','adm@gmail.com','Administrador',2,'$2b$10$cgXznwWXzPJYfhzucYvurezYsccCUgUnJAOkyX4ZCB61bScE6fpqO', 1,'2025-09-01 15:38:15',NULL,0,NULL);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Plus, X, Pencil, Trash } from "lucide-react";
-import ModalComputer from "@/components/ModalComputer";
-import TableComputers from "@/components/TableComputers";
+import ModalComputer from "@/components/computers/ModalComputer";
+import TableComputers from "@/components/computers/TableComputers";
 import { Computer } from "@/types/types";
 import { getComputers } from "@/actions/computersAction";
 

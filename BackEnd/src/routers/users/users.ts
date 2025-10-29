@@ -1,7 +1,7 @@
 import express from "express";
 import { authMiddleware } from "../../middleware/authMiddleware.js";
 import getConnection from "../../mysqlConnection/mysqlConnection.js";
-import type { Connection } from "mysql2/promise";
+import type { Connection, RowDataPacket } from "mysql2/promise";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import "dotenv/config"
@@ -12,6 +12,8 @@ import { z } from "zod";
 const userSchema = z.object({
     user_name: z.string().min(2, {message: "O nome deve ter pelo menos dois caracteres"}),
     position: z.string().min(2, {message: "A posiçaõ deve ter pelos menos dois caracteres"}),
+    email_user: z.email({message: "Email inválido"}).nullable(),
+    status_user: z.int().nonnegative({message: "O status do usuário deve ser um número positivo"}),
     level_user: z.number().int().positive({message: "O nível do usuário não pode ser negativo"}),
     password: z.string().min(4, {message: "A senha deve ter pelos menos 4 caracteres"}),
     reset_password: z.number().int().nonnegative({message: "O parâmetro de reset de senha deve um ser um número positivo"})
@@ -49,7 +51,7 @@ usersRouter.post("/validate", async (req, res) => {
         }
 
         const {user_name, password} = validate_data.data;
-        const [rows] = await connection.execute<any[]>("SELECT id, password_user, reset_password, level_user FROM users WHERE user_name = ?", [user_name]);
+        const [rows] = await connection.execute<RowDataPacket[0]>("SELECT id, password_user, reset_password, level_user FROM users WHERE user_name = ?", [user_name]);
 
         if(rows.length === 0){
             return res.json({message: "Usuário ou senha incorretos", success: false});
@@ -94,14 +96,15 @@ usersRouter.post("/validate", async (req, res) => {
 usersRouter.use(authMiddleware);
 
 usersRouter.get("/", async (req, res) => {
+    console.log("Chegou na rota de listagem de usuários");
     try{
         const connection: Connection | null = await getConnection();
         if(!connection){return res.json({message: "Erro na conexão"})};
 
-        const [rows] = await connection.execute<any[]>("SELECT id, user_name, position, registration_date, updated_at FROM users");
+        const [rows] = await connection.execute<any[]>("SELECT id, user_name, position, level_user, email_user, status_user, registration_date, updated_at FROM users");
 
-        console.log(rows);
-        res.status(200).json({message: "Usuários aqui", success: true});
+        //console.log(rows);
+        res.status(200).json({message: "Listagem de usuário com sucesso", success: true, data: rows});
     }catch(error){
         console.log("Erro na conexão mysql: " + error)
         res.json({message: "Erro na requisição"});

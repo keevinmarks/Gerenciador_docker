@@ -30,7 +30,7 @@ const Layout = ({ children }: Props) => {
         <nav className="mx-auto flex max-w-7xl items-center justify-between py-3 px-6 lg:px-8">
           {/* Logo */}
           <Link
-            href="/dashboard"
+            href="#"
             className="text-2xl font-extrabold hover:text-blue-200 transition-colors"
           >
             ManagerSys

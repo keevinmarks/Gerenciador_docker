@@ -9,3 +9,17 @@ export type Computer = {
     reason: string;
     return_date: string | null;
 }
+
+export type User = {
+    id?: number;
+    user_name: string;
+    email_user: string;
+    position: string;
+    level_user: number;
+    status_user: boolean;
+    password_user?: string;
+    registration_date?: string;
+    updated_at?: string | null;
+    reset_password?: boolean;
+    path_img?: string;
+}

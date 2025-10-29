@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import validateUser from "@/actions/validateAction";
+import {validateUser} from "@/actions/userAction";
 
 const LoginBox = () => {
   const router = useRouter();
