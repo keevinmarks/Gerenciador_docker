@@ -1,6 +1,6 @@
 import { User } from "@/types/types";
 import { X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Props = {
   showModal: (value:boolean) => void;
@@ -15,10 +15,34 @@ const ModalUser = ({showModal, editingUser, user}:Props) => {
   const [level, setLevel] = useState<string>("");
   const [status, setStatus] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [repassword, setRePassword] = useState<boolean>(false);
 
+  useEffect(() => {
+    if(editingUser && user){
+      setName(user.user_name);
+      setPosition(user.position);
+      setEmail(user.email_user);
+      setLevel(user.level_user === 2? "Admin":"User");
+      setStatus(user.status_user === 1? "Ativo": "Desativado");
+      setRePassword(user.reset_password === 1);
+    }
+  }, [])
   const handleSave = async () => {
-    console.log("Ação de salvar usuário");
+    if(!editingUser){
+      const user = {
+        user_name: name,
+        position: position,
+        email_user: email,
+        password_user: password,
+        level_user: level,
+        status_user: status,
+        reset_password: repassword
+      }
+
+      
+    }
   };
+
   return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
@@ -73,8 +97,9 @@ const ModalUser = ({showModal, editingUser, user}:Props) => {
               onChange={e => setLevel(e.target.value)}
               className="border border-gray-300 rounded-lg px-3 py-2"
             >
-              <option value="User">User</option>
-              <option value="Admin">Admin</option>
+              <option value="" disabled>Nível de acesso</option>
+              <option value="Usuário">Usuário</option>
+              <option value="Administrador">Administrador</option>
             </select>
             <select
               name="status"
@@ -82,9 +107,14 @@ const ModalUser = ({showModal, editingUser, user}:Props) => {
               onChange={e => setStatus(e.target.value)}
               className="border border-gray-300 rounded-lg px-3 py-2"
             >
+              <option value="" disabled>Status</option>
               <option value="Ativo">Ativo</option>
               <option value="Desativado">Desativado</option>
             </select>
+            <div className="flex flex-row gap-3 w-full justify-center">
+              <input type="checkbox" className="h-6 w-6" checked={repassword} onChange={e => setRePassword(e.target.checked)}/>
+              <div>O usuário deve alterar a senha no próximo login</div>
+            </div>
             {/*
             <input
               type="file"
@@ -105,15 +135,15 @@ const ModalUser = ({showModal, editingUser, user}:Props) => {
           <div className="flex justify-end gap-3 mt-6">
             <button
               onClick={() => showModal(false)}
-              className="px-4 py-2 border rounded-md text-black"
+              className="px-4 py-2 border rounded-md text-black cursor-pointer"
             >
               Cancelar
             </button>
             <button
               onClick={handleSave}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer"
             >
-              Salvar
+              {editingUser? "Salvar" : "Adicionar"}
             </button>
           </div>
         </div>

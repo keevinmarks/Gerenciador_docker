@@ -1,6 +1,6 @@
 "use server"
 import { isRedirectError } from "next/dist/client/components/redirect-error";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 type User = {
     name:string;
@@ -67,5 +67,34 @@ export const getUsers = async () => {
     }catch(error){
         console.log("Erro ao buscar usuários: " + error);
         return {message: "Erro ao buscar usuários: " + error, success: false }
+    }
+}
+
+export const insertUsers = async (user:User) => {
+    try{
+
+        const cookieStore = await cookies();
+
+        const token = cookieStore.get("authToken")?.value;
+
+        const headers = {
+            "Content-Type":"application/json",
+            "Authorization": ""
+        };
+
+        if(token){
+            headers["Authorization"] = `Bearer ${token}`;
+        }else{
+            console.log("O token de autorização não existe");
+        }
+
+        const resp = fetch("http://api:3001/users", {
+            method: "POST",
+            headers,
+            body: JSON.stringify(user)
+        })
+    }catch(error){
+        console.log(`Erro ao inserir usuário: ${error}`);
+        return {message: `Erro ao inserir usuário: ${error}`, success: false}
     }
 }

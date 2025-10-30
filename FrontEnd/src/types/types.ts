@@ -16,10 +16,10 @@ export type User = {
     email_user: string;
     position: string;
     level_user: number;
-    status_user: boolean;
+    status_user: number;
     password_user?: string;
     registration_date?: string;
     updated_at?: string | null;
-    reset_password?: boolean;
+    reset_password?: number;
     path_img?: string;
 }

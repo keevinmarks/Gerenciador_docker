@@ -1,16 +1,18 @@
 import { User } from "@/types/types";
-import { Pencil, Trash } from "lucide-react";
+import { Pencil, Trash, Plus } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
+import ModalUser from "./ModalUser";
 
 type Props = {
     user: User;
 }
 
 const UserItem = ({user}:Props) => {
+    const [showModal, setShowModal] = useState<boolean>(false)
 
-
-    const HandleSave = () => {
-        console.log("Editar usuário: " + user.id);
+    const HandleEdit = () => {
+        setShowModal(true);
     }
 
     const HandleDelete = () => {
@@ -54,22 +56,26 @@ const UserItem = ({user}:Props) => {
             <td className="py-2 px-3">
                 <span
                 className={`cursor-pointer px-3 py-1 rounded-full text-sm font-medium ${
-                    user.status_user === true
+                    user.status_user === 1
                     ? "bg-green-100 text-green-700 border border-green-300"
                     : "bg-yellow-100 text-yellow-700 border border-yellow-300"
                 }`}
                 >
-                {user.status_user === true ? "Ativo" : "Inativo"}
+                {user.status_user === 1 ? "Ativo" : "Inativo"}
                 </span>
             </td>
             <td className="py-2 px-3 text-center flex justify-center gap-2">
-                <button onClick={HandleSave} className="p-2 rounded-full hover:bg-indigo-100">
+                <button onClick={HandleEdit} className="p-2 rounded-full hover:bg-indigo-100 cursor-pointer">
                     <Pencil className="w-5 h-5 text-black" />
                 </button>
-                <button onClick={HandleDelete} className="p-2 rounded-full hover:bg-red-100">
+                <button onClick={HandleDelete} className="p-2 rounded-full hover:bg-red-100 cursor-pointer">
                     <Trash className="w-5 h-5 text-red-600" />
                 </button>
+                <button onClick={HandleDelete} className="p-2 rounded-full hover:bg-red-100 cursor-pointer">
+                    <Plus className="w-5 h-5 text-red-600" />
+                </button>
             </td>
+            {showModal && <ModalUser editingUser={true} showModal={setShowModal} user={user}/>}
         </tr>
     )
 }
