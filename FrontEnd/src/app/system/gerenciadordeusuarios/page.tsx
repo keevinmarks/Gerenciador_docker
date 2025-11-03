@@ -150,8 +150,8 @@ export default function UserManager() {
   //   }
   // };
   const getUsersList = async () => {
+    console.log("Chamou a função de atualizar lista");
     const userList = await getUsers();
-    console.log(userList);
     setUsers(userList);
   }
   useEffect(() => {
@@ -178,11 +178,11 @@ export default function UserManager() {
       )} */}
 
       <div className="bg-white shadow-lg rounded-xl p-6 border border-gray-200">
-        <TableUsers users={users}/>
+        <TableUsers users={users} getUsers={getUsersList}/>
       </div>
 
       {showModal && (
-        <ModalUser showModal={setShowModal} editingUser={false}/>
+        <ModalUser showModal={setShowModal} editingUser={false} getUsers={getUsersList}/>
       )}
 
       {/* {deleteUser && (

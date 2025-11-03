@@ -1,12 +1,13 @@
 "use server"
+import { User } from "@/types/types";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-type User = {
+type UserValidate = {
     name:string;
     password: string;
 }
-export const validateUser = async ({name, password}: User) => {
+export const validateUser = async ({name, password}: UserValidate) => {
     try{
         const res = await fetch("http://api:3001/users/validate", {
             method: "POST",
@@ -62,7 +63,6 @@ export const getUsers = async () => {
         })
 
         const jsonResp = await resp.json();
-        console.log(jsonResp);
         return jsonResp.data;
     }catch(error){
         console.log("Erro ao buscar usuários: " + error);
@@ -88,7 +88,7 @@ export const insertUsers = async (user:User) => {
             console.log("O token de autorização não existe");
         }
 
-        const resp = fetch("http://api:3001/users", {
+        const resp = await fetch("http://api:3001/users", {
             method: "POST",
             headers,
             body: JSON.stringify(user)

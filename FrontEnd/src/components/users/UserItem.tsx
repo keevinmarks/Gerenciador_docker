@@ -3,9 +3,11 @@ import { Pencil, Trash, Plus } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import ModalUser from "./ModalUser";
+import { getUsers } from "@/actions/userAction";
 
 type Props = {
     user: User;
+    getUsers: () => void;
 }
 
 const UserItem = ({user}:Props) => {
@@ -75,7 +77,7 @@ const UserItem = ({user}:Props) => {
                     <Plus className="w-5 h-5 text-red-600" />
                 </button>
             </td>
-            {showModal && <ModalUser editingUser={true} showModal={setShowModal} user={user}/>}
+            {showModal && <ModalUser editingUser={true} showModal={setShowModal} user={user} getUsers={getUsers}/>}
         </tr>
     )
 }

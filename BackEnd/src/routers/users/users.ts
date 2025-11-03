@@ -15,7 +15,7 @@ const userSchema = z.object({
     email_user: z.email({message: "Email inválido"}).nullable(),
     status_user: z.int().nonnegative({message: "O status do usuário deve ser um número positivo"}),
     level_user: z.number().int().positive({message: "O nível do usuário não pode ser negativo"}),
-    password: z.string().min(4, {message: "A senha deve ter pelos menos 4 caracteres"}),
+    password_user: z.string().min(4, {message: "A senha deve ter pelos menos 4 caracteres"}),
     reset_password: z.number().int().nonnegative({message: "O parâmetro de reset de senha deve um ser um número positivo"})
 });
 
@@ -116,24 +116,27 @@ usersRouter.post("/", async (req, res) => {
     
     if(req.user?.level_user as number >= 2){
         try{
+            console.log(req.body);
             const connection: Connection | null = await getConnection();
             if(!connection){return res.json({message: "Erro na conexão", success: false})};
 
             const validate_data = userSchema.safeParse(req.body);
 
             if(!validate_data.success){
+                console.log("Veio até aqui");
                 return res.status(400).json({message: "Dados invalidos", success: false});
             }
 
-            const {user_name, position, level_user, password, reset_password} = validate_data.data;
+            const {user_name, position, email_user, level_user, status_user, password_user, reset_password} = validate_data.data;
 
-            const passwordEncrypted = await bcrypt.hash(password as string, 10);
+            const passwordEncrypted = await bcrypt.hash(password_user as string, 10);
 
-            await connection.execute<any[0]>(`INSERT INTO users (user_name, position, level_user, password_user, reset_password) values (?, ?, ?, ?, ?)`, [user_name, position, level_user, passwordEncrypted, reset_password]);
+            await connection.execute<any[0]>(`INSERT INTO users (user_name, position, email_user, level_user, status_user, password_user, reset_password) values (?, ?, ?, ?, ?, ?, ?)`, [user_name, position, email_user, level_user, status_user, passwordEncrypted, reset_password]);
 
             res.status(200).json({message: "Usuário cadastrado", success: true});
+            
         }catch(error){
-            console.log(`Error na inserção de usuário`);
+            console.log(`Error na inserção de usuário ${error}`);
             res.status(500).json({message: "Usuário não cadastrado", success: false});
         }
     }else{

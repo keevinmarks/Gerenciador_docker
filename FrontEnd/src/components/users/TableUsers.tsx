@@ -4,8 +4,9 @@ import UserItem from "./UserItem";
 
 type Props = {
     users: User[];
+    getUsers: () => void;
 }
-const TableUsers = ({users}:Props) => {
+const TableUsers = ({users, getUsers}:Props) => {
     return(
         <table className="w-full text-left border-collapse">
           <thead>
@@ -20,7 +21,7 @@ const TableUsers = ({users}:Props) => {
           </thead>
           <tbody>
             {users.map((user, index) => (
-              <UserItem key={index} user={user}/>
+              <UserItem key={index} user={user} getUsers={getUsers}/>
             ))}
           </tbody>
         </table>

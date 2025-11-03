@@ -1,3 +1,4 @@
+import { insertUsers } from "@/actions/userAction";
 import { User } from "@/types/types";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -5,10 +6,11 @@ import { useEffect, useState } from "react";
 type Props = {
   showModal: (value:boolean) => void;
   editingUser: boolean;
-  user?: User
+  user?: User;
+  getUsers: () => void;
 }
 
-const ModalUser = ({showModal, editingUser, user}:Props) => {
+const ModalUser = ({showModal, editingUser, user, getUsers}:Props) => {
   const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [position, setPosition] = useState<string>("");
@@ -33,13 +35,24 @@ const ModalUser = ({showModal, editingUser, user}:Props) => {
         user_name: name,
         position: position,
         email_user: email,
+        status_user: status === 'Ativo'? 1 : 0,
+        level_user: level === "Administrador"? 2 : 1,
         password_user: password,
-        level_user: level,
-        status_user: status,
-        reset_password: repassword
+        reset_password: repassword? 1 : 0
       }
 
-      
+      const values = Object.values(user);
+
+      const hasEmptyField = values.some(value => value === undefined || value === null || value === "");
+
+      if(hasEmptyField){
+        alert("Preencha todos os campos");
+        return;
+      }
+
+      await insertUsers(user);
+      await getUsers();
+      showModal(false);
     }
   };
 
