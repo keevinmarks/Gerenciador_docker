@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import ButtonLogoff from "@/components/ButtonLogoff";
+import ButtonLogoff from "@/components/system/ButtonLogoff";
 
 type Props = {
   children: ReactNode;

@@ -1,4 +1,4 @@
-import ButtonLogoff from "@/components/ButtonLogoff";
+import ButtonLogoff from "@/components/system/ButtonLogoff";
 
 const UsersPage = () => {
     return(

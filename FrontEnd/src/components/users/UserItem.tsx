@@ -3,14 +3,14 @@ import { Pencil, Trash, Plus } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import ModalUser from "./ModalUser";
-import { getUsers } from "@/actions/userAction";
+
 
 type Props = {
     user: User;
     getUsers: () => void;
 }
 
-const UserItem = ({user}:Props) => {
+const UserItem = ({user, getUsers}:Props) => {
     const [showModal, setShowModal] = useState<boolean>(false)
 
     const HandleEdit = () => {
@@ -20,7 +20,8 @@ const UserItem = ({user}:Props) => {
     const HandleDelete = () => {
         console.log("Deletar usuário: " + user.id);
     }
-
+    console.log("Nivel aqui");
+    console.log(user.level_user);
     return (
         <tr className="border-b hover:bg-gray-50 transition">
             <td className="py-2 px-3">

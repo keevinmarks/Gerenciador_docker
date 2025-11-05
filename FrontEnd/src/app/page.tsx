@@ -1,5 +1,5 @@
 import { deleteCookies } from "@/actions/deleteCookies";
-import LoginBox from "@/components/LoginBox";
+import LoginBox from "@/components/system/LoginBox";
 
 
 const LoginPage = () => {

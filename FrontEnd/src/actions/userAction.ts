@@ -3,6 +3,7 @@ import { User } from "@/types/types";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { use } from "react";
 type UserValidate = {
     name:string;
     password: string;
@@ -93,8 +94,43 @@ export const insertUsers = async (user:User) => {
             headers,
             body: JSON.stringify(user)
         })
+
+        const respJson = await resp.json();
     }catch(error){
         console.log(`Erro ao inserir usuário: ${error}`);
         return {message: `Erro ao inserir usuário: ${error}`, success: false}
+    }
+}
+
+export const updateUsers = async (user: Partial<User>) => {
+    console.log(user);
+    try{
+
+        const cookieStore = await cookies();
+
+        const token = cookieStore.get("authToken")?.value;
+
+        const headers = {
+            "Content-Type":"application/json",
+            "Authorization": ""
+        };
+
+        if(token){
+            headers["Authorization"] = `Bearer ${token}`;
+        }else{
+            console.log("O token de autorização não existe");
+        }
+
+        const resp = await fetch("http://api:3001/users", {
+            method: "PUT",
+            headers,
+            body: JSON.stringify(user)
+        })
+
+        const respJson = await resp.json();
+
+    }catch(error){
+        console.log("Erro ao atualizar usuário: " + error);
+        return {message: "Erro ao atualizar usuário", success: false}
     }
 }

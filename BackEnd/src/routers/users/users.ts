@@ -5,7 +5,7 @@ import type { Connection, RowDataPacket } from "mysql2/promise";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import "dotenv/config"
-import { z } from "zod";
+import { email, z } from "zod";
 
 
 
@@ -14,7 +14,7 @@ const userSchema = z.object({
     position: z.string().min(2, {message: "A posiçaõ deve ter pelos menos dois caracteres"}),
     email_user: z.email({message: "Email inválido"}).nullable(),
     status_user: z.int().nonnegative({message: "O status do usuário deve ser um número positivo"}),
-    level_user: z.number().int().positive({message: "O nível do usuário não pode ser negativo"}),
+    level_user: z.number().int().nonnegative({message: "O nível do usuário não pode ser negativo"}),
     password_user: z.string().min(4, {message: "A senha deve ter pelos menos 4 caracteres"}),
     reset_password: z.number().int().nonnegative({message: "O parâmetro de reset de senha deve um ser um número positivo"})
 });
@@ -23,10 +23,12 @@ const updateSchema = z.object({
     id: z.number().int().positive({message: "O id deve ser um numero inteiro positivo"}),
     user_name: z.string().min(2, {message: "O nome deve conter pelos menos dois caracteres"}),
     position: z.string().min(2, {message: "A posição deve conter pelos menos dois caracteres"}),
-    level_user: z.number().int().positive({message: "O nível deve ser um interiro positivo"}),
-    password: z.string().min(4, {message: "A senha deve conter pelos menos 4 caracteres"}),
-    reset_password: z.number().int().positive({message: "O parâmetro de reset de senha deve um ser um número positivo"})
-})
+    email_user: z.email({message: "Email inválido"}).nullable(),
+    status_user: z.number().int().nonnegative({message: "O status deve ser um número inteiro positivo"}),
+    level_user: z.number().int().nonnegative({message: "O nível deve ser um interiro positivo"}),
+    password_user: z.string().refine(val => val.length === 0 || val.length >= 4, {message: "A senha deve estar em branco (para não alterar) ou ter pelo menos 4 caracteres"}),
+    reset_password: z.number().int().nonnegative({message: "O parâmetro de reset de senha deve um ser um número positivo"})
+});
 
 const validateSchema = z.object({
     user_name: z.string().min(1, {message: "Preencha todo os campos"}),
@@ -34,7 +36,7 @@ const validateSchema = z.object({
 });
 
 const deleteSchema = z.object({
-    id: z.number().int().positive({message: "O id deve ser um número interio positivo"})
+    id_user: z.number().int().positive({message: "O id deve ser um número interio positivo"})
 });
 
 export const usersRouter = express.Router();
@@ -95,13 +97,13 @@ usersRouter.post("/validate", async (req, res) => {
 
 usersRouter.use(authMiddleware);
 
+//Rota para pegar os usuários
 usersRouter.get("/", async (req, res) => {
-    console.log("Chegou na rota de listagem de usuários");
     try{
         const connection: Connection | null = await getConnection();
         if(!connection){return res.json({message: "Erro na conexão"})};
 
-        const [rows] = await connection.execute<any[]>("SELECT id, user_name, position, level_user, email_user, status_user, registration_date, updated_at FROM users");
+        const [rows] = await connection.execute<any[]>("SELECT id, user_name, position, level_user, password_user, email_user, status_user, registration_date, updated_at, reset_password FROM users");
 
         //console.log(rows);
         res.status(200).json({message: "Listagem de usuário com sucesso", success: true, data: rows});
@@ -146,21 +148,45 @@ usersRouter.post("/", async (req, res) => {
 });
 
 //Rota para atualizar usuário:
-usersRouter.put("/update", async (req, res) => {
+usersRouter.put("/", async (req, res) => {
+    console.log("Chegou na atualização de usuário");
     if(req.user?.level_user as number >= 2){
-
         try{
             const connection: Connection | null = await getConnection();
             if(!connection){ return res.status(400).json({message: "Erro com a conexão do banco", success: false})};
+            console.log(req.body);
 
+            // ASSUMINDO que seu 'updateSchema' agora permite 'password_user' ser opcional (ex: .optional())
             const validate_data = updateSchema.safeParse(req.body);
 
-            if(!validate_data.success){ return res.json({message: "Dados inválidos", success: false})};
-            const {id, user_name, position, level_user, password, reset_password} = validate_data.data;
+            if(!validate_data.success){ return res.json({message: "Dados inválidos", success: false, errors: validate_data.error.flatten()})}; // Adicionei errors para debug
             
-            const passwordEncrypted = await bcrypt.hash(password, 10);
+            // 'password_user' pode vir como undefined/null ou "" se for opcional
+            const {id, user_name, position, email_user, status_user, level_user, password_user, reset_password} = validate_data.data;
+            
+            // --- INÍCIO DA MODIFICAÇÃO ---
 
-            await connection.execute<any[]>("UPDATE users SET user_name = ?, position = ?, level_user = ?, password_user = ?, reset_password = ? WHERE id = ?", [user_name, position, level_user, passwordEncrypted, reset_password, id]);
+            // 1. Defina a query e os parâmetros base (sem a senha)
+            let sqlQuery = "UPDATE users SET user_name = ?, position = ?, email_user = ?, status_user = ?, level_user = ?, reset_password = ?";
+            let sqlParams: any[] = [user_name, position, email_user, status_user, level_user, reset_password];
+
+            // 2. Verifique se a senha foi enviada e não está vazia
+            if (password_user && password_user.trim() !== "") {
+                // Se foi, criptografe e adicione à query e aos parâmetros
+                const passwordEncrypted = await bcrypt.hash(password_user, 10);
+                
+                sqlQuery += ", password_user = ?"; // Adiciona o campo na query
+                sqlParams.push(passwordEncrypted); // Adiciona o valor nos parâmetros
+            }
+
+            // 3. Adicione o WHERE no final (sempre necessário)
+            sqlQuery += " WHERE id = ?";
+            sqlParams.push(id);
+
+            // 4. Execute a query montada dinamicamente
+            await connection.execute<any[]>(sqlQuery, sqlParams);
+
+            // --- FIM DA MODIFICAÇÃO ---
 
             res.status(200).json({message: "Usuário atualizado com sucesso", success: true});
 
@@ -169,26 +195,28 @@ usersRouter.put("/update", async (req, res) => {
             res.json({message: "Erro ao tentar atualizar o usuário", success: false});
         }
     }else{
-        return res.status(403).json({message: "Você não tem permissão para isso", success: false});
+        return res.status(4.03).json({message: "Você não tem permissão para isso", success: false});
     }
 });
 
 
 //Rota para deletar usuário:
-usersRouter.delete("/delete", async (req, res) => {
+usersRouter.delete("/:id_user", async (req, res) => {
 
     if(req.user?.level_user as number >= 2){
         try{
             const connection: Connection | null = await getConnection();
             if(!connection){ return res.status(500).json({message: "Erro ao se conectar ao banco", success: false})};
 
-            const validate_data = deleteSchema.safeParse(req.body);
+            const validate_data = deleteSchema.safeParse({
+                id_user: Number(req.params.id_user)
+            });
 
             if(!validate_data.success){return res.status(400).json({message: "Dados inválidos"})};
 
-            const {id} = validate_data.data;
+            const {id_user} = validate_data.data;
 
-            await connection.execute<any[]>("DELETE FROM users WHERE id = ?", [id]);
+            await connection.execute<any[]>("DELETE FROM users WHERE id = ?", [id_user]);
             
             res.status(200).json({message: "Usuário deletado com sucesso", success: true});
         }catch(error){
