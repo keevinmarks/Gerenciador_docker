@@ -71,66 +71,63 @@ export const getUsers = async () => {
     }
 }
 
-export const insertUsers = async (user:User) => {
-    try{
+export const insertUsers = async (formData: FormData) => { // MODIFICADO
+    try{
+        const cookieStore = await cookies();
+        const token = cookieStore.get("authToken")?.value;
 
-        const cookieStore = await cookies();
+        // MODIFICADO: 'Content-Type' foi removido
+        // Usamos 'HeadersInit' para uma melhor tipagem
+        const headers: HeadersInit = {
+            "Authorization": ""
+        };
 
-        const token = cookieStore.get("authToken")?.value;
+        if(token){
+            headers["Authorization"] = `Bearer ${token}`;
+        }else{
+            console.log("O token de autorização não existe");
+        }
 
-        const headers = {
-            "Content-Type":"application/json",
-            "Authorization": ""
-        };
+        const resp = await fetch("http://api:3001/users", {
+            method: "POST",
+            headers,
+            body: formData // MODIFICADO: Enviando o formData
+        })
 
-        if(token){
-            headers["Authorization"] = `Bearer ${token}`;
-        }else{
-            console.log("O token de autorização não existe");
-        }
-
-        const resp = await fetch("http://api:3001/users", {
-            method: "POST",
-            headers,
-            body: JSON.stringify(user)
-        })
-
-        const respJson = await resp.json();
-    }catch(error){
-        console.log(`Erro ao inserir usuário: ${error}`);
-        return {message: `Erro ao inserir usuário: ${error}`, success: false}
-    }
+        const respJson = await resp.json();
+        return respJson; // Adicionei um retorno
+    }catch(error){
+        console.log(`Erro ao inserir usuário: ${error}`);
+        return {message: `Erro ao inserir usuário: ${error}`, success: false}
+    }
 }
 
-export const updateUsers = async (user: Partial<User>) => {
-    console.log(user);
-    try{
+export const updateUsers = async (formData: FormData) => { // MODIFICADO
+    try{
+        const cookieStore = await cookies();
+        const token = cookieStore.get("authToken")?.value;
 
-        const cookieStore = await cookies();
+        // MODIFICADO: 'Content-Type' foi removido
+        const headers: HeadersInit = {
+            "Authorization": ""
+        };
 
-        const token = cookieStore.get("authToken")?.value;
+        if(token){
+            headers["Authorization"] = `Bearer ${token}`;
+        }else{
+            console.log("O token de autorização não existe");
+        }
 
-        const headers = {
-            "Content-Type":"application/json",
-            "Authorization": ""
-        };
+        const resp = await fetch("http://api:3001/users", {
+            method: "PUT",
+            headers,
+            body: formData // MODIFICADO: Enviando o formData
+        })
 
-        if(token){
-            headers["Authorization"] = `Bearer ${token}`;
-        }else{
-            console.log("O token de autorização não existe");
-        }
-
-        const resp = await fetch("http://api:3001/users", {
-            method: "PUT",
-            headers,
-            body: JSON.stringify(user)
-        })
-
-        const respJson = await resp.json();
-
-    }catch(error){
-        console.log("Erro ao atualizar usuário: " + error);
-        return {message: "Erro ao atualizar usuário", success: false}
-    }
+        const respJson = await resp.json();
+        return respJson; // Adicionei um retorno
+    }catch(error){
+        console.log("Erro ao atualizar usuário: " + error);
+        return {message: "Erro ao atualizar usuário", success: false}
+    }
 }
