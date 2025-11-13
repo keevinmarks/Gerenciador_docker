@@ -5,18 +5,32 @@ import type { Connection, RowDataPacket } from "mysql2/promise";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import "dotenv/config"
-import { email, z } from "zod";
+import { z } from "zod";
+import multer from "multer";
+import path from "path";
 
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "uploads/");
+    },
+    filename: (req, file, cb){
+        const uniqueSuffix = Date.now() + "-" + file.originalname;
+        cb(null, uniqueSuffix);
+    }
+})
+
+const upload = multer({storage: storage});
 
 
 const userSchema = z.object({
     user_name: z.string().min(2, {message: "O nome deve ter pelo menos dois caracteres"}),
     position: z.string().min(2, {message: "A posiçaõ deve ter pelos menos dois caracteres"}),
     email_user: z.email({message: "Email inválido"}).nullable(),
-    status_user: z.int().nonnegative({message: "O status do usuário deve ser um número positivo"}),
-    level_user: z.number().int().nonnegative({message: "O nível do usuário não pode ser negativo"}),
+    status_user: z.coerce.number().int().nonnegative({message: "O status do usuário deve ser um número positivo"}),
+    level_user: z.coerce.number().int().nonnegative({message: "O nível do usuário não pode ser negativo"}),
     password_user: z.string().min(4, {message: "A senha deve ter pelos menos 4 caracteres"}),
-    reset_password: z.number().int().nonnegative({message: "O parâmetro de reset de senha deve um ser um número positivo"})
+    reset_password: z.coerce.number().int().nonnegative({message: "O parâmetro de reset de senha deve um ser um número positivo"})
 });
 
 const updateSchema = z.object({
@@ -24,10 +38,10 @@ const updateSchema = z.object({
     user_name: z.string().min(2, {message: "O nome deve conter pelos menos dois caracteres"}),
     position: z.string().min(2, {message: "A posição deve conter pelos menos dois caracteres"}),
     email_user: z.email({message: "Email inválido"}).nullable(),
-    status_user: z.number().int().nonnegative({message: "O status deve ser um número inteiro positivo"}),
-    level_user: z.number().int().nonnegative({message: "O nível deve ser um interiro positivo"}),
+    status_user: z.coerce.number().int().nonnegative({message: "O status deve ser um número inteiro positivo"}),
+    level_user: z.coerce.number().int().nonnegative({message: "O nível deve ser um interiro positivo"}),
     password_user: z.string().refine(val => val.length === 0 || val.length >= 4, {message: "A senha deve estar em branco (para não alterar) ou ter pelo menos 4 caracteres"}),
-    reset_password: z.number().int().nonnegative({message: "O parâmetro de reset de senha deve um ser um número positivo"})
+    reset_password: z.coerce.number().int().nonnegative({message: "O parâmetro de reset de senha deve um ser um número positivo"})
 });
 
 const validateSchema = z.object({
@@ -36,7 +50,7 @@ const validateSchema = z.object({
 });
 
 const deleteSchema = z.object({
-    id_user: z.number().int().positive({message: "O id deve ser um número interio positivo"})
+    id_user: z.coerce.number().int().positive({message: "O id deve ser um número interio positivo"})
 });
 
 export const usersRouter = express.Router();
@@ -114,11 +128,14 @@ usersRouter.get("/", async (req, res) => {
 });
 
 //Rota para cadastro de usuário:
-usersRouter.post("/", async (req, res) => {
+usersRouter.post("/",upload.single("avatar"), async (req, res) => {
     
     if(req.user?.level_user as number >= 2){
         try{
-            console.log(req.body);
+
+            console.log("Dados recebidos: ",req.body);
+            console.log("Arquivo recebido: ",req.file);
+
             const connection: Connection | null = await getConnection();
             if(!connection){return res.json({message: "Erro na conexão", success: false})};
 
@@ -133,8 +150,18 @@ usersRouter.post("/", async (req, res) => {
 
             const passwordEncrypted = await bcrypt.hash(password_user as string, 10);
 
-            await connection.execute<any[0]>(`INSERT INTO users (user_name, position, email_user, level_user, status_user, password_user, reset_password) values (?, ?, ?, ?, ?, ?, ?)`, [user_name, position, email_user, level_user, status_user, passwordEncrypted, reset_password]);
-
+            let fields = ["user_name", "position", "email_user", "level_user", "status_user", "password_user", "reset_password"];
+            let values: (string | number | null)[] = [user_name, position, email_user, level_user, status_user, passwordEncrypted, reset_password];
+            let placeholders = "?, ?, ?, ?, ?, ?, ?";
+            
+            if(req.file){
+                fields.push("path_img");
+                values.push(req.file.path);
+                placeholders += ", ?";
+            }
+            //await connection.execute<any[0]>(`INSERT INTO users (user_name, position, email_user, level_user, status_user, password_user, reset_password) values (?, ?, ?, ?, ?, ?, ?)`, [user_name, position, email_user, level_user, status_user, passwordEncrypted, reset_password]);
+            const sql = `insert into users (${fields.join(", ")}) values (${placeholders})`;
+            await connection.execute<any[0]>(sql, values);
             res.status(200).json({message: "Usuário cadastrado", success: true});
             
         }catch(error){
@@ -148,7 +175,7 @@ usersRouter.post("/", async (req, res) => {
 });
 
 //Rota para atualizar usuário:
-usersRouter.put("/", async (req, res) => {
+usersRouter.put("/",upload.single("avatar"), async (req, res) => {
     console.log("Chegou na atualização de usuário");
     if(req.user?.level_user as number >= 2){
         try{
