@@ -6,6 +6,9 @@ import { router } from "./routers/index.js";
 //Criando a conexão com servidor:
 const server = express();
 
+//Criando uma conexão para as imagens:
+server.use("/uploads", express.static("uploads"));
+
 //Helmet para possibilitar o uso de cabveçalhos:
 server.use(helmet());
 

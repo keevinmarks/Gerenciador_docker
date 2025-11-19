@@ -20,14 +20,14 @@ const UserItem = ({user, getUsers}:Props) => {
     const HandleDelete = () => {
         console.log("Deletar usuário: " + user.id);
     }
-    console.log("Nivel aqui");
-    console.log(user.level_user);
+    console.log("Imagem aqui");
+    console.log(user.path_img);
     return (
         <tr className="border-b hover:bg-gray-50 transition">
             <td className="py-2 px-3">
                 {user.path_img ? (
                 <Image
-                    src={user.path_img}
+                    src={`http://localhost:3001/uploads/${user.path_img}`}
                     width={40}
                     height={40}
                     alt="Foto_perfil"

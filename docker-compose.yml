@@ -34,6 +34,8 @@ services:
       DB_NAME: manager_system # Use o mesmo nome de banco definido no serviço 'db'
       JWT_SECRET: "2F1E19C22892CDD0CC4A834C6B95A6CE"
       # Adicione outras variáveis de ambiente que sua API precisar
+    volumes:
+      - ./uploads:/app/uploads
 
   # Serviço do Cliente Frontend (React)
   client:

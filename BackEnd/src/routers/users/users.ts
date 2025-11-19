@@ -12,9 +12,11 @@ import path from "path";
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, "uploads/");
+        console.log("Multer tentará salvar em:", path.join(process.cwd(), 'uploads'));
+        const uploadPath = path.join(process.cwd(), "uploads")
+        cb(null, uploadPath);
     },
-    filename: (req, file, cb){
+    filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + "-" + file.originalname;
         cb(null, uniqueSuffix);
     }
@@ -40,7 +42,7 @@ const updateSchema = z.object({
     email_user: z.email({message: "Email inválido"}).nullable(),
     status_user: z.coerce.number().int().nonnegative({message: "O status deve ser um número inteiro positivo"}),
     level_user: z.coerce.number().int().nonnegative({message: "O nível deve ser um interiro positivo"}),
-    password_user: z.string().refine(val => val.length === 0 || val.length >= 4, {message: "A senha deve estar em branco (para não alterar) ou ter pelo menos 4 caracteres"}),
+    password_user: z.string().refine(val => val.length === 0 || val.length >= 4, {message: "A senha deve estar em branco (para não alterar) ou ter pelo menos 4 caracteres"}).optional(),
     reset_password: z.coerce.number().int().nonnegative({message: "O parâmetro de reset de senha deve um ser um número positivo"})
 });
 
@@ -117,7 +119,7 @@ usersRouter.get("/", async (req, res) => {
         const connection: Connection | null = await getConnection();
         if(!connection){return res.json({message: "Erro na conexão"})};
 
-        const [rows] = await connection.execute<any[]>("SELECT id, user_name, position, level_user, password_user, email_user, status_user, registration_date, updated_at, reset_password FROM users");
+        const [rows] = await connection.execute<any[]>("SELECT id, user_name, position, level_user, password_user, email_user, status_user, registration_date, updated_at, reset_password, path_img FROM users");
 
         //console.log(rows);
         res.status(200).json({message: "Listagem de usuário com sucesso", success: true, data: rows});
