@@ -117,10 +117,11 @@ const ModalUser = ({showModal, editingUser, user, getUsers}:Props) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-between z-50 overflow-hidden">
       {/* MODIFICADO: Adicionado 'overflow-y-auto' ao container e 'my-8' ao modal para permitir scroll */}
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg my-8">
-        <div className="flex justify-between items-center mb-4">
+      <div className="bg-white p-2 rounded-lg shadow-lg w-full max-w-lg my-4">
+        <div className="flex items-center justify-between mb-1">
+          <div className="w-5 h-5"></div>
           <h3 className="text-lg font-semibold text-blue-700">
             {editingUser ? "Editar Usuário" : "Adicionar Usuário"}
           </h3>
@@ -129,7 +130,7 @@ const ModalUser = ({showModal, editingUser, user, getUsers}:Props) => {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 text-black">
+        <div className="grid grid-cols-1 gap-1 text-black">
           {/* ... (inputs de name, cargo, email, senha) ... */}
           <input
               type="text"
@@ -191,7 +192,7 @@ const ModalUser = ({showModal, editingUser, user, getUsers}:Props) => {
             </div>
           
           {/* NOVO: Input de arquivo para a foto de perfil */}
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 justify-center items-center">
             <label htmlFor="foto" className="text-sm font-medium text-gray-700">
               Foto de Perfil (Opcional)
             </label>
@@ -206,16 +207,16 @@ const ModalUser = ({showModal, editingUser, user, getUsers}:Props) => {
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 mt-6">
+        <div className="flex justify-end gap-3 mt-2">
           <button
             onClick={() => showModal(false)}
-            className="px-4 py-2 border rounded-md text-black cursor-pointer"
+            className="px-1 py-1 border rounded-md text-black cursor-pointer text-center"
           >
             Cancelar
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer"
+            className="px-1 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer text-center"
           >
             {editingUser? "Salvar" : "Adicionar"}
           </button>

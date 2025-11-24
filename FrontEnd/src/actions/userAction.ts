@@ -131,3 +131,33 @@ export const updateUsers = async (formData: FormData) => { // MODIFICADO
         return {message: "Erro ao atualizar usuário", success: false}
     }
 }
+
+export const deleteUser = async (id: number) => {
+    try{
+        const cookieStore = await cookies();
+        const token = cookieStore.get("authToken")?.value;
+
+
+        const headers: HeadersInit = {
+            "Authorization": ""
+        } 
+
+        if(token){
+            headers["Authorization"] = `Bearer ${token}`;
+        }else{
+            console.log("O token de autorização não existe");
+        }
+
+        const resp = await fetch(`http://api:3001/${id}`, {
+            method: "PUT",
+            headers // MODIFICADO: Enviando o formData
+        })
+
+        const respJson = await resp.json();
+        return respJson;
+
+    }catch(error){
+        console.log("Erro ao deletar usuário" + error);
+        return {message: "Erro ao atualizar usuário", success: false}
+    }
+}

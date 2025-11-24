@@ -3,6 +3,7 @@ import { Pencil, Trash, Plus } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import ModalUser from "./ModalUser";
+import ShowModalDelete from "./ShowModalDelete";
 
 
 type Props = {
@@ -12,12 +13,14 @@ type Props = {
 
 const UserItem = ({user, getUsers}:Props) => {
     const [showModal, setShowModal] = useState<boolean>(false)
+    const [showModelDelete, setShowModalDelete] = useState<boolean>(false);
 
     const HandleEdit = () => {
         setShowModal(true);
     }
 
     const HandleDelete = () => {
+        setShowModalDelete(true);
         console.log("Deletar usuário: " + user.id);
     }
     console.log("Imagem aqui");
@@ -27,11 +30,12 @@ const UserItem = ({user, getUsers}:Props) => {
             <td className="py-2 px-3">
                 {user.path_img ? (
                 <Image
-                    src={`http://localhost:3001/uploads/${user.path_img}`}
+                    src={`http://localhost:3001/${user.path_img}`}
                     width={40}
                     height={40}
                     alt="Foto_perfil"
                     className="rounded-full object-cover"
+                    unoptimized={true}
                 />
                 ) : (
                 <Image
@@ -79,6 +83,7 @@ const UserItem = ({user, getUsers}:Props) => {
                 </button>
             </td>
             {showModal && <ModalUser editingUser={true} showModal={setShowModal} user={user} getUsers={getUsers}/>}
+            {showModelDelete && <ShowModalDelete setModal={setShowModalDelete} user={user}/> }
         </tr>
     )
 }

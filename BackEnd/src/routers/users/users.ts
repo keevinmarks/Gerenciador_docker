@@ -17,7 +17,8 @@ const storage = multer.diskStorage({
         cb(null, uploadPath);
     },
     filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + "-" + file.originalname;
+        const sanitizedFilename = file.originalname.replace(/[^a-zA-Z0-9.]/g, "-");
+        const uniqueSuffix = Date.now() + "-" + sanitizedFilename;
         cb(null, uniqueSuffix);
     }
 })
@@ -158,7 +159,7 @@ usersRouter.post("/",upload.single("avatar"), async (req, res) => {
             
             if(req.file){
                 fields.push("path_img");
-                values.push(req.file.path);
+                values.push(`uploads/${req.file.filename}`);
                 placeholders += ", ?";
             }
             //await connection.execute<any[0]>(`INSERT INTO users (user_name, position, email_user, level_user, status_user, password_user, reset_password) values (?, ?, ?, ?, ?, ?, ?)`, [user_name, position, email_user, level_user, status_user, passwordEncrypted, reset_password]);
