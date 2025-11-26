@@ -77,6 +77,35 @@ LOCK TABLES `users` WRITE;
 INSERT INTO `users` VALUES (1,'Administrador','adm@gmail.com','Administrador',2,'$2b$10$cgXznwWXzPJYfhzucYvurezYsccCUgUnJAOkyX4ZCB61bScE6fpqO', 1,'2025-09-01 15:38:15',NULL,0,NULL);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `printers`
+--
+
+DROP TABLE IF EXISTS `Impressoras`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Impressoras` (
+  id_impressora INT AUTO_INCREMENT,
+  name_impressora VARCHAR(100) NOT NULL,
+  mac_impressora VARCHAR(50) NOT NULL,
+  asset_number BIGINT UNSIGNED NOT NULL,
+  status_impressora TINYINT(1) NOT NULL DEFAULT 1,
+  exit_date DATE,
+  reason TEXT NOT NULL,
+  return_date DATE,
+  PRIMARY KEY (id_impressora)
+)
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `printers`
+--
+
+LOCK TABLES `Impressoras` WRITE;
+/*!40000 ALTER TABLE `printers` DISABLE KEYS */;
+/*!40000 ALTER TABLE `printers` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

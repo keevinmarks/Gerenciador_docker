@@ -19,3 +19,15 @@ export type Computer = {
     reason: string;
     return_date: string;
 }
+
+export type Impressora = {
+  id_impressora: number;
+  name_impressora: string;
+  mac_impressora: string;
+  asset_number: number;
+  status_impressora: number; // 1 ativo, 0 desativado
+  exit_date: string | null;
+  reason: string | null;
+  return_date: string | null;
+};
+

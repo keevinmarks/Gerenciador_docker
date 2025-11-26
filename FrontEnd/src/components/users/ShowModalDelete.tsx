@@ -1,5 +1,4 @@
 import { User } from "@/types/types";
-import {delete}
 
 type Props = {
     setModal: (value:boolean) => void;
@@ -9,7 +8,8 @@ type Props = {
 const ShowModalDelete = ({setModal, user}: Props) => {
 
     const handleDelete = () => {
-
+      // Fechar o modal por enquanto. Implemente a lógica de exclusão (API/action) aqui.
+      setModal(false);
     }
     return(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -28,6 +28,7 @@ const ShowModalDelete = ({setModal, user}: Props) => {
                 Cancelar
               </button>
               <button
+                onClick={handleDelete}
                 className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
               >
                 Excluir

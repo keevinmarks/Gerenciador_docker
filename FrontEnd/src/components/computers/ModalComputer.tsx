@@ -9,8 +9,9 @@ type Props = {
     setShowModal?: (value: boolean) => void;
     isEditing: boolean;
     computer?:Computer;
+  initialType?: string;
 }
-const ModalComputer = ({setShowModal, isEditing, computer, setModalEdit, updateComputerList}:Props) => {
+const ModalComputer = ({setShowModal, isEditing, computer, setModalEdit, updateComputerList, initialType}:Props) => {
     const [idComputer, setIdComputer] = useState<number | null>(null);
     const [type, setType] = useState<string>("");
     const [name, setName] = useState<string>("");
@@ -98,8 +99,14 @@ const ModalComputer = ({setShowModal, isEditing, computer, setModalEdit, updateC
         setExitDate(computer.exit_date);
         setReason(computer.reason);
         setReturnDate(computer.return_date);
+      } else {
+        // when creating new and an initialType is provided, prefill it
+        if(initialType){
+          setType(initialType);
+        }
       }
     },[])
+
     return(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6">
