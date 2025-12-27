@@ -1,11 +1,9 @@
 "use client";
+
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
 import Image from "next/image";
-import positivoImg from "@/img/positivo.png";
-import compaqImg from "@/img/compaq.png";
-import backgroundImg from "@/img/Background.png";
-
+import { motion, AnimatePresence } from "framer-motion";
 
 type Computer = {
   id: number;
@@ -18,6 +16,22 @@ type Computer = {
   dataSaida: string | null;
   motivoSaida: string | null;
   dataRetorno: string | null;
+};
+
+// 🔹 Variants
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 },
+};
+
+const stagger = {
+  visible: { transition: { staggerChildren: 0.08 } },
+};
+
+const modalAnim = {
+  hidden: { opacity: 0, scale: 0.9 },
+  visible: { opacity: 1, scale: 1 },
+  exit: { opacity: 0, scale: 0.9 },
 };
 
 const ComputerList = () => {
@@ -48,49 +62,64 @@ const ComputerList = () => {
     },
   ]);
 
-  const [selectedComputer, setSelectedComputer] = useState<Computer | null>(
-    null
-  );
+  const [selectedComputer, setSelectedComputer] =
+    useState<Computer | null>(null);
 
-  // Ajuste: caminhos relativos à pasta /public
   const getImage = (tipo: string) => {
-    if (tipo.toLowerCase().includes("positivo")) {
-      return "/images/positivo.png";
-    } else if (tipo.toLowerCase().includes("compaq")) {
-      return "/images/compaq.png";
-    } else {
-      return "/images/default.png";
-    }
+    if (tipo.toLowerCase().includes("positivo")) return "/images/positivo.png";
+    if (tipo.toLowerCase().includes("compaq")) return "/images/compaq.png";
+    return "/images/default.png";
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6 text-black">
-      <h1 className="text-2xl font-bold mb-6">Histórico de Computadores</h1>
+    <motion.div
+      className="min-h-screen bg-gray-100 p-6 text-black"
+      initial="hidden"
+      animate="visible"
+      variants={stagger}
+    >
+      <motion.h1
+        variants={fadeUp}
+        className="text-2xl font-bold mb-6"
+      >
+        Histórico de Computadores
+      </motion.h1>
 
-      <div className="bg-white rounded-xl shadow p-6 border border-gray-200">
+      <motion.div
+        variants={fadeUp}
+        className="bg-white rounded-xl shadow p-6 border border-gray-200"
+      >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-700">Histórico</h2>
           <Plus className="w-4 h-4 text-gray-600" />
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full border border-gray-200 rounded-sm overflow-hidden">
+          <table className="w-full border border-gray-200">
             <thead>
-              <tr className="bg-blue-50 text-left text-sm text-black">
-                <th className="py-3 px-4 border-b">Tipo</th>
-                <th className="py-3 px-4 border-b">Nome</th>
-                <th className="py-3 px-4 border-b">MAC</th>
-                <th className="py-3 px-4 border-b">Tombo</th>
-                <th className="py-3 px-4 border-b">Problema</th>
-                <th className="py-3 px-4 border-b">Status</th>
+              <tr className="bg-blue-50 text-sm">
+                <th className="py-3 px-4">Tipo</th>
+                <th className="py-3 px-4">Nome</th>
+                <th className="py-3 px-4">MAC</th>
+                <th className="py-3 px-4">Tombo</th>
+                <th className="py-3 px-4">Problema</th>
+                <th className="py-3 px-4">Status</th>
               </tr>
             </thead>
-            <tbody className="text-sm divide-y divide-gray-200">
+
+            <motion.tbody
+              variants={stagger}
+              initial="hidden"
+              animate="visible"
+              className="text-sm divide-y"
+            >
               {computers.map((pc) => (
-                <tr
+                <motion.tr
                   key={pc.id}
+                  variants={fadeUp}
+                  whileHover={{ scale: 1.01 }}
                   onClick={() => setSelectedComputer(pc)}
-                  className="hover:bg-blue-50/60 cursor-pointer transition-colors"
+                  className="cursor-pointer hover:bg-blue-50/60"
                 >
                   <td className="py-3 px-4">{pc.tipo}</td>
                   <td className="py-3 px-4">{pc.nome}</td>
@@ -108,82 +137,78 @@ const ComputerList = () => {
                       {pc.status}
                     </span>
                   </td>
-                </tr>
+                </motion.tr>
               ))}
-            </tbody>
+            </motion.tbody>
           </table>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Modal de detalhes */}
-      {selectedComputer && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-[420px] relative text-black animate-fadeIn">
-            <button
-              onClick={() => setSelectedComputer(null)}
-              className="absolute top-3 right-3 text-gray-500 hover:text-red-500 transition"
+      {/* 🔹 Modal */}
+      <AnimatePresence>
+        {selectedComputer && (
+          <motion.div
+            className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              variants={modalAnim}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="bg-white rounded-2xl shadow-xl p-6 w-[420px] relative"
             >
-              <X size={20} />
-            </button>
+              <motion.button
+                whileHover={{ rotate: 90, scale: 1.2 }}
+                onClick={() => setSelectedComputer(null)}
+                className="absolute top-3 right-3 text-gray-500 hover:text-red-500"
+              >
+                <X size={20} />
+              </motion.button>
 
-            <h2 className="text-center text-lg font-semibold mb-1">
-              Histórico do Computador
-            </h2>
-            <p
-              className={`text-center text-sm mb-4 ${
-                selectedComputer.motivoSaida === "Manutenção"
-                  ? "text-yellow-600"
-                  : "text-red-600"
-              }`}
-            >
-              Status: {selectedComputer.motivoSaida}
-            </p>
+              <h2 className="text-center text-lg font-semibold mb-2">
+                Histórico do Computador
+              </h2>
 
-            <div className="flex justify-center mb-4">
-              <Image
-                src={getImage(selectedComputer.tipo)}
-                alt={selectedComputer.tipo}
-                width={200}
-                height={150}
-                className="object-contain"
-              />
-            </div>
+              <p
+                className={`text-center text-sm mb-4 ${
+                  selectedComputer.motivoSaida === "Manutenção"
+                    ? "text-yellow-600"
+                    : "text-red-600"
+                }`}
+              >
+                Status: {selectedComputer.motivoSaida}
+              </p>
 
-            <div className="text-sm space-y-1">
-              <p>
-                <strong>Computador:</strong> {selectedComputer.nome}
-              </p>
-              <p>
-                <strong>Tipo:</strong> {selectedComputer.tipo}
-              </p>
-              <p>
-                <strong>Tombo:</strong> {selectedComputer.tombo}
-              </p>
-              <p>
-                <strong>Problema:</strong> {selectedComputer.Problema}
-              </p>
-              <p>
-                <strong>MAC:</strong> {selectedComputer.mac}
-              </p>
-              <p>
-                <strong>Status:</strong> {selectedComputer.status}
-              </p>
-            </div>
+              <motion.div
+                className="flex justify-center mb-4"
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+              >
+                <Image
+                  src={getImage(selectedComputer.tipo)}
+                  alt={selectedComputer.tipo}
+                  width={200}
+                  height={150}
+                  className="object-contain"
+                />
+              </motion.div>
 
-            <div className="mt-4 text-sm">
-              <strong>Observação:</strong>
-              <p className="text-justify mt-1 text-gray-700">
-                Foi realizada manutenção preventiva e corretiva no computador
-                com tombo {selectedComputer.tombo}, endereço MAC{" "}
-                {selectedComputer.mac}. As atividades incluíram limpeza interna,
-                verificação de hardware e reinstalação do sistema operacional. O
-                equipamento foi testado e está funcionando normalmente.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+              <div className="text-sm space-y-1">
+                <p><strong>Computador:</strong> {selectedComputer.nome}</p>
+                <p><strong>Tipo:</strong> {selectedComputer.tipo}</p>
+                <p><strong>Tombo:</strong> {selectedComputer.tombo}</p>
+                <p><strong>Problema:</strong> {selectedComputer.Problema}</p>
+                <p><strong>MAC:</strong> {selectedComputer.mac}</p>
+                <p><strong>Status:</strong> {selectedComputer.status}</p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 

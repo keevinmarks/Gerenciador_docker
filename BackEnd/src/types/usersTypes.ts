@@ -19,3 +19,15 @@ export type Computer = {
     reason: string;
     return_date: string;
 }
+
+export type Printer = {
+  id_printer: number;
+  name_printer: string;
+  mac_printer: string;
+  asset_number: number;
+  status_printer: number;
+  exit_date?: string | null;
+  reason?: string | null;
+  return_date?: string | null;
+};
+

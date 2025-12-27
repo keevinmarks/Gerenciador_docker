@@ -1,9 +1,17 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { Pencil, Trash2, CheckCircle, XCircle } from "lucide-react";
-import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import { motion, AnimatePresence } from "framer-motion";
 
-// 🔹 Tipo de dispositivo
 type Device = {
   id: string;
   nome: string;
@@ -13,24 +21,23 @@ type Device = {
   status: "Ativo" | "Inativo";
 };
 
-// 🔹 Cores usadas nos gráficos
-const COLORS = ["#22c55e", "#ef4444", "#3b82f6"]; // Verde, Vermelho, Azul
+const COLORS = ["#22c55e", "#ef4444"];
 
-const Dashboard = () => {
-  const [computadores, setComputadores] = useState<Device[]>([]);
-  const [impressoras, setImpressoras] = useState<Device[]>([]);
+export default function Dashboard() {
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // 🔹 Busca dispositivos da API
   useEffect(() => {
     const fetchDevices = async () => {
       try {
-        const res = await fetch("http://localhost:3001/api/devices");
+        const res = await fetch("/api/devices", { cache: "no-store" });
         const data: Device[] = await res.json();
-
-        setComputadores(data.filter((d) => d.tipo === "Computador"));
-        setImpressoras(data.filter((d) => d.tipo === "Impressora"));
+        setDevices(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Erro ao buscar dispositivos:", error);
+        setDevices([]);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -39,10 +46,12 @@ const Dashboard = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // 🔹 Dados para gráficos
+  const computadores = devices.filter((d) => d.tipo === "Computador");
+  const impressoras = devices.filter((d) => d.tipo === "Impressora");
+
   const ativos = computadores.filter((c) => c.status === "Ativo").length;
   const inativos = computadores.filter((c) => c.status === "Inativo").length;
-  const naRede = computadores.filter((c) => c.ip).length; // supondo que IP definido = está na rede
+  const naRede = computadores.filter((c) => c.ip).length;
 
   const statusData = [
     { name: "Ativos", value: ativos },
@@ -54,197 +63,96 @@ const Dashboard = () => {
     { name: "Fora da Rede", value: computadores.length - naRede },
   ];
 
+  if (loading) {
+    return (
+      <div className="p-6 text-gray-500">
+        Carregando dashboard...
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-white p-6">
-      {/* ================== Cabeçalho ================== */}
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">
+    <motion.div className="p-6 bg-white min-h-screen">
+      <h1 className="text-3xl font-bold mb-6">
         Dashboard de Dispositivos
       </h1>
 
-      {/* ================== Cards de Estatísticas ================== */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {/* Card Computadores */}
-        <div className="bg-white shadow rounded-xl p-5 flex items-center justify-between border">
-          <div>
-            <p className="text-gray-600 text-sm">Computadores</p>
-            <h2 className="text-2xl font-bold text-gray-800">
-              {computadores.length}
-            </h2>
+      {/* Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        {[
+          ["Computadores", computadores.length],
+          ["Impressoras", impressoras.length],
+          ["Ativos", ativos],
+          ["Na Rede", naRede],
+        ].map(([label, value]) => (
+          <div
+            key={label}
+            className="bg-white shadow rounded-xl p-5 border"
+          >
+            <p className="text-sm text-gray-600">{label}</p>
+            <p className="text-2xl font-bold">{value}</p>
           </div>
-        </div>
-
-        {/* Card Impressoras */}
-        <div className="bg-white shadow rounded-xl p-5 flex items-center justify-between border">
-          <div>
-            <p className="text-gray-600 text-sm">Impressoras</p>
-            <h2 className="text-2xl font-bold text-gray-800">
-              {impressoras.length}
-            </h2>
-          </div>
-        </div>
-
-        {/* Card Na Rede */}
-        <div className="bg-white shadow rounded-xl p-5 flex items-center justify-between border">
-          <div>
-            <p className="text-gray-600 text-sm">Na Rede</p>
-            <h2 className="text-2xl font-bold text-gray-800">{naRede}</h2>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* ================== Gráficos ================== */}
+      {/* Gráficos */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {/* Status dos Computadores */}
-        <div className="bg-white shadow rounded-xl p-6 border">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            Status dos Computadores
-          </h2>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={statusData}
-                cx="50%"
-                cy="50%"
-                innerRadius={50}
-                outerRadius={90}
-                paddingAngle={5}
-                dataKey="value"
-              >
-                {statusData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Computadores na Rede */}
-        <div className="bg-white shadow rounded-xl p-6 border">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            Computadores na Rede
-          </h2>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={redeData}
-                cx="50%"
-                cy="50%"
-                innerRadius={50}
-                outerRadius={90}
-                paddingAngle={5}
-                dataKey="value"
-              >
-                {redeData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+        {[statusData, redeData].map((data, i) => (
+          <div
+            key={i}
+            className="bg-white shadow rounded-xl p-6 border"
+          >
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie data={data} dataKey="value" innerRadius={55}>
+                  {data.map((_, i) => (
+                    <Cell key={i} fill={COLORS[i]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        ))}
       </div>
 
-      {/* ================== Listas ================== */}
+      {/* Tabelas */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Lista de Computadores */}
-        <div className="bg-white shadow-md rounded-lg p-4 border">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            Computadores
-          </h2>
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="border-b text-gray-600">
-                <th className="py-2 px-3">Nome</th>
-                <th className="py-2 px-3">IP</th>
-                <th className="py-2 px-3">Status</th>
-                <th className="py-2 px-3 text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {computadores.map((pc) => (
-                <tr
-                  key={pc.id}
-                  className="border-b last:border-none hover:bg-gray-50"
-                >
-                  <td className="py-2 px-3 font-medium">{pc.nome}</td>
-                  <td className="py-2 px-3">{pc.ip}</td>
-                  <td className="py-2 px-3">
-                    {pc.status === "Ativo" ? (
-                      <span className="flex items-center gap-1 text-green-600 text-sm">
-                        <CheckCircle size={16} /> Ativo
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 text-red-600 text-sm">
-                        <XCircle size={16} /> Inativo
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-2 px-3 text-right flex gap-2 justify-end">
-                    <button className="p-1 text-blue-600 hover:text-blue-800">
-                      <Pencil size={18} />
-                    </button>
-                    <button className="p-1 text-red-600 hover:text-red-800">
-                      <Trash2 size={18} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Lista de Impressoras */}
-        <div className="bg-white shadow-md rounded-lg p-4 border">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            Impressoras
-          </h2>
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="border-b text-gray-600">
-                <th className="py-2 px-3">Nome</th>
-                <th className="py-2 px-3">IP</th>
-                <th className="py-2 px-3">Status</th>
-                <th className="py-2 px-3 text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {impressoras.map((imp) => (
-                <tr
-                  key={imp.id}
-                  className="border-b last:border-none hover:bg-gray-50"
-                >
-                  <td className="py-2 px-3 font-medium">{imp.nome}</td>
-                  <td className="py-2 px-3">{imp.ip}</td>
-                  <td className="py-2 px-3">
-                    {imp.status === "Ativo" ? (
-                      <span className="flex items-center gap-1 text-green-600 text-sm">
-                        <CheckCircle size={16} /> Ativo
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 text-red-600 text-sm">
-                        <XCircle size={16} /> Inativo
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-2 px-3 text-right flex gap-2 justify-end">
-                    <button className="p-1 text-blue-600 hover:text-blue-800">
-                      <Pencil size={18} />
-                    </button>
-                    <button className="p-1 text-red-600 hover:text-red-800">
-                      <Trash2 size={18} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {[computadores, impressoras].map((list, i) => (
+          <div key={i} className="bg-white shadow p-4 border rounded-lg">
+            <h2 className="font-semibold mb-4">
+              {i === 0 ? "Computadores" : "Impressoras"}
+            </h2>
+            <table className="w-full text-sm">
+              <tbody>
+                <AnimatePresence>
+                  {list.map((item) => (
+                    <motion.tr key={item.id} className="border-b">
+                      <td className="py-2">{item.nome}</td>
+                      <td className="py-2">{item.ip || "-"}</td>
+                      <td className="py-2">
+                        {item.status === "Ativo" ? (
+                          <span className="text-green-600 flex items-center gap-1">
+                            <CheckCircle size={16} /> Ativo
+                          </span>
+                        ) : (
+                          <span className="text-red-600 flex items-center gap-1">
+                            <XCircle size={16} /> Inativo
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-2 text-right">
+                        <Pencil size={16} />
+                      </td>
+                    </motion.tr>
+                  ))}
+                </AnimatePresence>
+              </tbody>
+            </table>
+          </div>
+        ))}
       </div>
-    </div>
+    </motion.div>
   );
-};
-
-export default Dashboard;
+}

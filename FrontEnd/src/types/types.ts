@@ -23,3 +23,15 @@ export type User = {
     reset_password?: number;
     path_img?: string;
 }
+
+export type Printer = {
+  id_printer?: number;
+  name_printer: string;
+  mac_printer: string;
+  asset_number: number;
+  status_printer: 0 | 1;
+  exit_date?: string | null;
+  reason?: string;
+  return_date?: string | null;
+};
+
