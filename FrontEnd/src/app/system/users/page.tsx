@@ -1,5 +1,3 @@
-import ButtonLogoff from "@/components/system/ButtonLogoff";
-
 const UsersPage = () => {
     return(
         <div className="bg-gray-400 border-4 border-solid border-gray-800 rounded-md h-96 overflow-hidden">

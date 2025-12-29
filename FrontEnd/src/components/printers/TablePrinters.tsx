@@ -6,9 +6,10 @@ import { Pencil, Trash } from "lucide-react";
 type Props = {
   printers: Printer[];
   onEdit: (printer: Printer) => void;
+  onDelete?: (printer: Printer) => void;
 };
 
-const TablePrinters = ({ printers, onEdit }: Props) => {
+const TablePrinters = ({ printers, onEdit, onDelete }: Props) => {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm text-left text-gray-600">
@@ -17,6 +18,7 @@ const TablePrinters = ({ printers, onEdit }: Props) => {
             <th className="px-4 py-3">Nome</th>
             <th className="px-4 py-3">Tombo</th>
             <th className="px-4 py-3">MAC</th>
+            <th className="px-4 py-3">Retirado Por</th>
             <th className="px-4 py-3">Status</th>
             <th className="px-4 py-3 text-right">Ações</th>
           </tr>
@@ -40,6 +42,8 @@ const TablePrinters = ({ printers, onEdit }: Props) => {
                 {printer.mac_printer}
               </td>
 
+              <td className="px-4 py-3">{printer.reason || "-"}</td>
+
               <td className="px-4 py-3">
                 <span
                   className={`px-2 py-1 rounded text-xs font-semibold ${
@@ -48,7 +52,7 @@ const TablePrinters = ({ printers, onEdit }: Props) => {
                       : "bg-red-100 text-red-700"
                   }`}
                 >
-                  {printer.status_printer === 1 ? "Ativo" : "Desativado"}
+                  {printer.status_printer === 1 ? "Ativo" : "Inativo"}
                 </span>
               </td>
 
@@ -60,7 +64,10 @@ const TablePrinters = ({ printers, onEdit }: Props) => {
                   <Pencil size={16} />
                 </button>
 
-                <button className="text-red-600 hover:text-red-800">
+                <button
+                  onClick={() => onDelete && onDelete(printer)}
+                  className="text-red-600 hover:text-red-800"
+                >
                   <Trash size={16} />
                 </button>
               </td>

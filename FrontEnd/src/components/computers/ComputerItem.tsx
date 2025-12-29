@@ -17,11 +17,7 @@ const ComputerItem = ({computer, modalUpdate}:Props) => {
     const handleDelete = () => {
         setModalDelete(true);
     }
-    const setDeleteId = (id:number) => {
-        if(confirm(`Tem certeza que deseja deletar o computador de id: ${id} ?`)){
-            alert("Computador deletado");
-        }
-    }
+    // deletion handled by parent modal; removed unused setDeleteId
 
     const formatDate = (dataValue:string | null) => {
         if(dataValue){

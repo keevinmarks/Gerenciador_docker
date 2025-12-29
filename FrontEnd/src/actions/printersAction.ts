@@ -1,15 +1,29 @@
-"use server";
-
 import { Printer } from "@/types/types";
 
-const API_URL = "http://api:3001/printers";
+const resolveApiBase = () => {
+  // If browser, prefer same host and port 3001 (works when frontend served from host)
+  if (typeof window !== "undefined") {
+    const protocol = window.location.protocol;
+    const hostname = window.location.hostname;
+    return `${protocol}//${hostname}:3001`;
+  }
+
+  // Else (build/server) use env vars or localhost
+  if (typeof process !== "undefined" && process.env) {
+    return process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001";
+  }
+
+  return "http://localhost:3001";
+};
+
+const API_URL = `${resolveApiBase()}/printers`;
 
 /* =======================
    INSERT
 ======================= */
 export const insertPrinter = async (
   printer: Omit<Printer, "id_printer">
-): Promise<{ success: boolean }> => {
+): Promise<{ success: boolean; message?: string }> => {
   try {
     const res = await fetch(API_URL, {
       method: "POST",
@@ -19,14 +33,16 @@ export const insertPrinter = async (
       body: JSON.stringify(printer),
     });
 
+    const json = await res.json().catch(() => ({}));
     if (!res.ok) {
-      throw new Error("Erro ao inserir impressora");
+      const msg = (json && (json.message || json.error)) || "Erro ao inserir impressora";
+      throw new Error(msg);
     }
 
-    return await res.json();
+    return json;
   } catch (error) {
     console.error("insertPrinter:", error);
-    return { success: false };
+    return { success: false, message: (error as Error).message };
   }
 };
 
@@ -57,7 +73,7 @@ export const getPrinters = async (): Promise<Printer[]> => {
 ======================= */
 export const updatePrinter = async (
   printer: Printer
-): Promise<{ success: boolean }> => {
+): Promise<{ success: boolean; message?: string }> => {
   try {
     const res = await fetch(API_URL, {
       method: "PUT",
@@ -67,14 +83,16 @@ export const updatePrinter = async (
       body: JSON.stringify(printer),
     });
 
+    const json = await res.json().catch(() => ({}));
     if (!res.ok) {
-      throw new Error("Erro ao atualizar impressora");
+      const msg = (json && (json.message || json.error)) || "Erro ao atualizar impressora";
+      return { success: false, message: msg };
     }
 
-    return await res.json();
+    return json;
   } catch (error) {
     console.error("updatePrinter:", error);
-    return { success: false };
+    return { success: false, message: (error as Error).message };
   }
 };
 
@@ -83,19 +101,21 @@ export const updatePrinter = async (
 ======================= */
 export const deletePrinter = async (
   id: number
-): Promise<{ success: boolean }> => {
+): Promise<{ success: boolean; message?: string }> => {
   try {
     const res = await fetch(`${API_URL}/${id}`, {
       method: "DELETE",
     });
 
+    const json = await res.json().catch(() => ({}));
     if (!res.ok) {
-      throw new Error("Erro ao deletar impressora");
+      const msg = (json && (json.message || json.error)) || "Erro ao deletar impressora";
+      return { success: false, message: msg };
     }
 
-    return await res.json();
+    return json;
   } catch (error) {
     console.error("deletePrinter:", error);
-    return { success: false };
+    return { success: false, message: (error as Error).message };
   }
 };

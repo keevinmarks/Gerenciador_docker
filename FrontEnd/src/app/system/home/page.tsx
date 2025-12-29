@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Pencil, Trash2, CheckCircle, XCircle } from "lucide-react";
+import { Pencil, CheckCircle, XCircle } from "lucide-react";
 import {
   PieChart,
   Pie,
@@ -10,7 +10,10 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { Printer } from "@/types/types";
 import { motion, AnimatePresence } from "framer-motion";
+import { getPrinters } from "@/actions/printersAction";
+import { getComputers } from "@/actions/computersAction";
 
 type Device = {
   id: string;
@@ -18,6 +21,7 @@ type Device = {
   ip: string;
   mac: string;
   tipo: "Computador" | "Impressora";
+  tipoMaquina?: string;
   status: "Ativo" | "Inativo";
 };
 
@@ -26,41 +30,68 @@ const COLORS = ["#22c55e", "#ef4444"];
 export default function Dashboard() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
+  const [printers, setPrinters] = useState<Printer[]>([]);
 
-  useEffect(() => {
-    const fetchDevices = async () => {
+  const fetchDevices = async () => {
+    try {
+      const computers = await getComputers();
+      const data: Device[] = Array.isArray(computers)
+        ? computers.map((c) => ({
+            id: String(c.id_computer ?? c.asset_number),
+            nome: c.name_computer ?? "",
+            ip: "",
+            mac: c.mac_computer ?? "",
+            tipoMaquina: c.type_computer ?? "",
+            tipo: "Computador",
+            status: c.status_computer === 1 ? "Ativo" : "Inativo",
+          }))
+        : [];
+      setDevices(data);
+    } catch (error) {
+      console.error("Erro ao buscar dispositivos:", error);
+      setDevices([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+    const fetchPrinters = async () => {
       try {
-        const res = await fetch("/api/devices", { cache: "no-store" });
-        const data: Device[] = await res.json();
-        setDevices(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("Erro ao buscar dispositivos:", error);
-        setDevices([]);
-      } finally {
-        setLoading(false);
+        const data = await getPrinters();
+        setPrinters(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Erro ao buscar impressoras:", err);
+        setPrinters([]);
       }
     };
 
+  useEffect(() => {
     fetchDevices();
-    const interval = setInterval(fetchDevices, 30000);
+    fetchPrinters();
+    const interval = setInterval(() => {
+      fetchDevices();
+      fetchPrinters();
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
   const computadores = devices.filter((d) => d.tipo === "Computador");
-  const impressoras = devices.filter((d) => d.tipo === "Impressora");
-
   const ativos = computadores.filter((c) => c.status === "Ativo").length;
   const inativos = computadores.filter((c) => c.status === "Inativo").length;
-  const naRede = computadores.filter((c) => c.ip).length;
+  const impressoras = printers;
 
   const statusData = [
     { name: "Ativos", value: ativos },
     { name: "Inativos", value: inativos },
   ];
 
-  const redeData = [
-    { name: "Na Rede", value: naRede },
-    { name: "Fora da Rede", value: computadores.length - naRede },
+  const printersAtivos = impressoras.filter((p) => p.status_printer === 1)
+    .length;
+  const printersInativos = impressoras.length - printersAtivos;
+
+  const printersStatusData = [
+    { name: "Ativos", value: printersAtivos },
+    { name: "Inativos", value: printersInativos },
   ];
 
   if (loading) {
@@ -83,7 +114,7 @@ export default function Dashboard() {
           ["Computadores", computadores.length],
           ["Impressoras", impressoras.length],
           ["Ativos", ativos],
-          ["Na Rede", naRede],
+          ["Inativos", inativos],
         ].map(([label, value]) => (
           <div
             key={label}
@@ -97,24 +128,35 @@ export default function Dashboard() {
 
       {/* Gráficos */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {[statusData, redeData].map((data, i) => (
-          <div
-            key={i}
-            className="bg-white shadow rounded-xl p-6 border"
-          >
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie data={data} dataKey="value" innerRadius={55}>
-                  {data.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        ))}
+        <div className="bg-white shadow rounded-xl p-6 border">
+          <h3 className="font-medium mb-3">Computadores (Ativos / Inativos)</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie data={statusData} dataKey="value" innerRadius={55}>
+                {statusData.map((_, i: number) => (
+                  <Cell key={i} fill={COLORS[i]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="bg-white shadow rounded-xl p-6 border">
+          <h3 className="font-medium mb-3">Impressoras (Ativas / Inativas)</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie data={printersStatusData} dataKey="value" innerRadius={55}>
+                {printersStatusData.map((_, i: number) => (
+                  <Cell key={i} fill={COLORS[i]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       {/* Tabelas */}
@@ -127,26 +169,48 @@ export default function Dashboard() {
             <table className="w-full text-sm">
               <tbody>
                 <AnimatePresence>
-                  {list.map((item) => (
-                    <motion.tr key={item.id} className="border-b">
-                      <td className="py-2">{item.nome}</td>
-                      <td className="py-2">{item.ip || "-"}</td>
-                      <td className="py-2">
-                        {item.status === "Ativo" ? (
-                          <span className="text-green-600 flex items-center gap-1">
-                            <CheckCircle size={16} /> Ativo
-                          </span>
-                        ) : (
-                          <span className="text-red-600 flex items-center gap-1">
-                            <XCircle size={16} /> Inativo
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-2 text-right">
-                        <Pencil size={16} />
-                      </td>
-                    </motion.tr>
-                  ))}
+                  {i === 0
+                    ? (list as Device[]).map((item) => (
+                        <motion.tr key={item.id} className="border-b">
+                          <td className="py-2">{item.nome}</td>
+                          <td className="py-2">{item.tipoMaquina || "-"}</td>
+                          <td className="py-2">
+                            {item.status === "Ativo" ? (
+                              <span className="text-green-600 flex items-center gap-1">
+                                <CheckCircle size={16} /> Ativo
+                              </span>
+                            ) : (
+                              <span className="text-red-600 flex items-center gap-1">
+                                <XCircle size={16} /> Inativo
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-2 text-right">
+                            <Pencil size={16} />
+                          </td>
+                        </motion.tr>
+                      ))
+                    : (list as Printer[]).map((p) => (
+                        <motion.tr key={p.id_printer ?? p.mac_printer} className="border-b">
+                          <td className="py-2">{p.name_printer}</td>
+                          <td className="py-2">{p.mac_printer}</td>
+                          <td className="py-2">{p.reason || "-"}</td>
+                          <td className="py-2">
+                            {p.status_printer === 1 ? (
+                              <span className="text-green-600 flex items-center gap-1">
+                                <CheckCircle size={16} /> Ativo
+                              </span>
+                            ) : (
+                              <span className="text-red-600 flex items-center gap-1">
+                                <XCircle size={16} /> Inativo
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-2 text-right">
+                            <Pencil size={16} />
+                          </td>
+                        </motion.tr>
+                      ))}
                 </AnimatePresence>
               </tbody>
             </table>

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import ModalUser from "./ModalUser";
 import ShowModalDelete from "./ShowModalDelete";
+import { motion } from "framer-motion";
 
 type Props = {
   user: User;
@@ -33,8 +34,8 @@ const UserItem = ({ user, getUsers }: Props) => {
   };
 
   return (
-    <tr className="border-b hover:bg-gray-50 transition">
-      <td className="py-2 px-3">
+    <>
+      <motion.td initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} className="py-2 px-3">
         <Image
           src={
             user.path_img
@@ -47,12 +48,12 @@ const UserItem = ({ user, getUsers }: Props) => {
           className="rounded-full object-cover"
           unoptimized={!!user.path_img}
         />
-      </td>
+      </motion.td>
 
-      <td className="py-2 px-3 font-medium">{user.user_name}</td>
-      <td className="py-2 px-3">{user.email_user}</td>
+      <motion.td initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} className="py-2 px-3 font-medium">{user.user_name}</motion.td>
+      <motion.td initial={{ opacity: 0, x: -3 }} animate={{ opacity: 1, x: 0 }} className="py-2 px-3">{user.email_user}</motion.td>
 
-      <td className="py-2 px-3">
+      <motion.td initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-2 px-3">
         <span
           className={`px-3 py-1 rounded-full text-sm font-medium ${
             user.level_user === 2
@@ -62,9 +63,9 @@ const UserItem = ({ user, getUsers }: Props) => {
         >
           {user.level_user === 2 ? "Administrador" : "Usuário"}
         </span>
-      </td>
+      </motion.td>
 
-      <td className="py-2 px-3">
+      <motion.td initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-2 px-3">
         <span
           className={`px-3 py-1 rounded-full text-sm font-medium ${
             user.status_user === 1
@@ -74,9 +75,9 @@ const UserItem = ({ user, getUsers }: Props) => {
         >
           {user.status_user === 1 ? "Ativo" : "Inativo"}
         </span>
-      </td>
+      </motion.td>
 
-      <td className="py-2 px-3 flex justify-center gap-2">
+      <motion.td initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-2 px-3 flex justify-center gap-2">
         <button onClick={handleEdit} className="p-2 rounded-full hover:bg-indigo-100">
           <Pencil className="w-5 h-5" />
         </button>
@@ -91,7 +92,7 @@ const UserItem = ({ user, getUsers }: Props) => {
         <button className="p-2 rounded-full hover:bg-gray-100">
           <Plus className="w-5 h-5" />
         </button>
-      </td>
+      </motion.td>
 
       {showModal && (
         <ModalUser
@@ -109,7 +110,7 @@ const UserItem = ({ user, getUsers }: Props) => {
           onDelete={handleConfirmDelete}
         />
       )}
-    </tr>
+    </>
   );
 };
 

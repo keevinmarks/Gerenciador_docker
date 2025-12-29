@@ -110,11 +110,12 @@ export default function Layout({ children }: Props) {
               className="rounded-full border-2 border-transparent hover:border-white transition"
             >
               <Image
-                src="/images/default.jpg"
+                src={user?.path_img ? `http://api:3001/${user.path_img}` : "/images/default.jpg"}
                 width={44}
                 height={44}
                 alt="Perfil"
                 className="rounded-full object-cover"
+                unoptimized={!!user?.path_img}
               />
             </motion.button>
 
@@ -133,7 +134,7 @@ export default function Layout({ children }: Props) {
                     {user ? (
                       <>
                         <p className="font-semibold">
-                          Olá, {user.name} 👋
+                          Olá, {user.displayName ?? user.user_name ?? user.name} 👋
                         </p>
                         <p className="text-xs text-gray-500 truncate">
                           {user.email}

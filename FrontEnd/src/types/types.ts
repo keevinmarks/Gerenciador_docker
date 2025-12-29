@@ -27,6 +27,7 @@ export type User = {
 export type Printer = {
   id_printer?: number;
   name_printer: string;
+  type_printer: string;
   mac_printer: string;
   asset_number: number;
   status_printer: 0 | 1;

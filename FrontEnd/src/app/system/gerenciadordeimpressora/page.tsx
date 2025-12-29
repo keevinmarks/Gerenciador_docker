@@ -5,42 +5,56 @@ import { Plus, Printer as PrinterIcon } from "lucide-react";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 
 import ModalPrinter from "@/components/printers/ModalPrinter";
+import ModalDeletePrinter from "@/components/printers/ModalDeletePrinter";
 import TablePrinters from "@/components/printers/TablePrinters";
 import { Printer } from "@/types/types";
 import { getPrinters } from "@/actions/printersAction";
 
 /* ======================
-   VARIANTES DE ANIMAÇÃO
+   VARIANTES
 ====================== */
 
 const pageVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      duration: 0.4,
-      ease: "easeOut",
-    },
+    transition: { duration: 0.5, ease: "easeOut" },
   },
 };
 
 const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: {
-      type: "spring",
-      stiffness: 120,
-      damping: 18,
-    },
+    transition: { type: "spring", stiffness: 120, damping: 18 },
   },
 };
 
 const stagger: Variants = {
   visible: {
+    transition: { staggerChildren: 0.12 },
+  },
+};
+
+const pulseButton: Variants = {
+  animate: {
+    scale: [1, 1.04, 1],
     transition: {
-      staggerChildren: 0.12,
+      duration: 2,
+      repeat: Infinity,
+      ease: "easeInOut",
+    },
+  },
+};
+
+const floatIcon: Variants = {
+  animate: {
+    y: [0, -10, 0],
+    transition: {
+      duration: 2.5,
+      repeat: Infinity,
+      ease: "easeInOut",
     },
   },
 };
@@ -52,12 +66,17 @@ const stagger: Variants = {
 const PrinterList = () => {
   const [showModal, setShowModal] = useState(false);
   const [printers, setPrinters] = useState<Printer[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedPrinter, setSelectedPrinter] =
     useState<Printer | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [printerToDelete, setPrinterToDelete] = useState<Printer | null>(null);
 
   const loadPrinters = async () => {
+    setLoading(true);
     const resp = await getPrinters();
     setPrinters(Array.isArray(resp) ? resp : []);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -92,7 +111,9 @@ const PrinterList = () => {
           </div>
 
           <motion.button
-            whileHover={{ scale: 1.05 }}
+            variants={pulseButton}
+            animate="animate"
+            whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => {
               setSelectedPrinter(null);
@@ -111,14 +132,32 @@ const PrinterList = () => {
           variants={fadeUp}
           className="bg-white rounded-2xl shadow-xl border border-gray-200 p-5"
         >
-          {printers.length === 0 ? (
+          {loading ? (
+            /* LOADING */
+            <motion.div
+              className="space-y-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              {[...Array(5)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-10 bg-gray-200 rounded-lg animate-pulse"
+                />
+              ))}
+            </motion.div>
+          ) : printers.length === 0 ? (
+            /* EMPTY */
             <motion.div
               className="flex flex-col items-center justify-center py-16 text-center"
-              initial={{ opacity: 0, scale: 0.96 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
+              transition={{ duration: 0.4 }}
             >
-              <PrinterIcon className="text-gray-300 mb-4" size={64} />
+              <motion.div variants={floatIcon} animate="animate">
+                <PrinterIcon className="text-gray-300 mb-4" size={64} />
+              </motion.div>
+
               <h2 className="text-xl font-semibold text-gray-700">
                 Nenhuma impressora cadastrada
               </h2>
@@ -128,18 +167,29 @@ const PrinterList = () => {
               </p>
             </motion.div>
           ) : (
-            <TablePrinters
-              printers={printers}
-              onEdit={(printer) => {
-                setSelectedPrinter(printer);
-                setShowModal(true);
-              }}
-            />
+            /* TABELA */
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4 }}
+            >
+              <TablePrinters
+                printers={printers}
+                onEdit={(printer) => {
+                  setSelectedPrinter(printer);
+                  setShowModal(true);
+                }}
+                onDelete={(printer) => {
+                  setPrinterToDelete(printer);
+                  setShowDeleteModal(true);
+                }}
+              />
+            </motion.div>
           )}
         </motion.div>
       </motion.div>
 
-      {/* MODAL */}
+      {/* MODAIS */}
       <AnimatePresence>
         {showModal && (
           <ModalPrinter
@@ -147,6 +197,14 @@ const PrinterList = () => {
             isEditing={!!selectedPrinter}
             printer={selectedPrinter ?? undefined}
             updatePrinterList={loadPrinters}
+          />
+        )}
+
+        {showDeleteModal && printerToDelete && (
+          <ModalDeletePrinter
+            printer={printerToDelete}
+            showModal={setShowDeleteModal}
+            updateList={loadPrinters}
           />
         )}
       </AnimatePresence>

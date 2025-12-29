@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 
 type Computer = {
   id: number;
@@ -18,21 +18,46 @@ type Computer = {
   dataRetorno: string | null;
 };
 
-// 🔹 Variants
-const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
+/* ======================
+   VARIANTS
+====================== */
+
+const page: Variants = {
+  hidden: { opacity: 0, scale: 0.98 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
 };
 
-const stagger = {
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 120, damping: 18 },
+  },
+};
+
+const stagger: Variants = {
   visible: { transition: { staggerChildren: 0.08 } },
 };
 
-const modalAnim = {
-  hidden: { opacity: 0, scale: 0.9 },
-  visible: { opacity: 1, scale: 1 },
-  exit: { opacity: 0, scale: 0.9 },
+const modal: Variants = {
+  hidden: { opacity: 0, scale: 0.9, y: 20 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 160, damping: 20 },
+  },
+  exit: { opacity: 0, scale: 0.9, y: 20 },
 };
+
+/* ======================
+   COMPONENT
+====================== */
 
 const ComputerList = () => {
   const [computers] = useState<Computer[]>([
@@ -73,21 +98,21 @@ const ComputerList = () => {
 
   return (
     <motion.div
-      className="min-h-screen bg-gray-100 p-6 text-black"
+      className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6 text-black"
+      variants={page}
       initial="hidden"
       animate="visible"
-      variants={stagger}
     >
       <motion.h1
         variants={fadeUp}
-        className="text-2xl font-bold mb-6"
+        className="text-3xl font-bold mb-8"
       >
         Histórico de Computadores
       </motion.h1>
 
       <motion.div
         variants={fadeUp}
-        className="bg-white rounded-xl shadow p-6 border border-gray-200"
+        className="bg-white rounded-2xl shadow-xl p-6 border border-gray-200"
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-700">Histórico</h2>
@@ -111,15 +136,17 @@ const ComputerList = () => {
               variants={stagger}
               initial="hidden"
               animate="visible"
+              layout
               className="text-sm divide-y"
             >
               {computers.map((pc) => (
                 <motion.tr
                   key={pc.id}
                   variants={fadeUp}
-                  whileHover={{ scale: 1.01 }}
+                  layout
+                  whileHover={{ y: -2, boxShadow: "0 6px 14px rgba(0,0,0,0.08)" }}
                   onClick={() => setSelectedComputer(pc)}
-                  className="cursor-pointer hover:bg-blue-50/60"
+                  className="cursor-pointer bg-white hover:bg-blue-50/60"
                 >
                   <td className="py-3 px-4">{pc.tipo}</td>
                   <td className="py-3 px-4">{pc.nome}</td>
@@ -144,7 +171,7 @@ const ComputerList = () => {
         </div>
       </motion.div>
 
-      {/* 🔹 Modal */}
+      {/* MODAL */}
       <AnimatePresence>
         {selectedComputer && (
           <motion.div
@@ -154,14 +181,15 @@ const ComputerList = () => {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              variants={modalAnim}
+              variants={modal}
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="bg-white rounded-2xl shadow-xl p-6 w-[420px] relative"
+              className="bg-white rounded-2xl shadow-2xl p-6 w-[420px] relative"
             >
               <motion.button
                 whileHover={{ rotate: 90, scale: 1.2 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => setSelectedComputer(null)}
                 className="absolute top-3 right-3 text-gray-500 hover:text-red-500"
               >
@@ -184,8 +212,9 @@ const ComputerList = () => {
 
               <motion.div
                 className="flex justify-center mb-4"
-                initial={{ scale: 0.9 }}
-                animate={{ scale: 1 }}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 }}
               >
                 <Image
                   src={getImage(selectedComputer.tipo)}

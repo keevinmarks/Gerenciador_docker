@@ -1,22 +1,35 @@
 "use client";
 
 import { deletePrinter } from "@/actions/printersAction";
+import { Printer } from "@/types/types";
 
 type Props = {
   updateList: () => void;
   showModal: (value: boolean) => void;
-  printer_id: number;
+  printer: Printer;
 };
 
-const ModalDeletePrinter = ({
-  showModal,
-  printer_id,
-  updateList,
-}: Props) => {
+const ModalDeletePrinter = ({ showModal, printer, updateList }: Props) => {
   const handleDelete = async () => {
-    await deletePrinter(printer_id);
-    await updateList();
-    showModal(false);
+    if (!printer.id_printer) {
+      alert("ID da impressora inválido");
+      return;
+    }
+
+    try {
+      const resp = await deletePrinter(printer.id_printer);
+      console.debug("deletePrinter response:", resp);
+      if (!resp || !resp.success) {
+        alert(resp?.message || "Erro ao excluir impressora");
+        return;
+      }
+
+      await updateList();
+      showModal(false);
+    } catch (err) {
+      console.error("handleDelete error:", err);
+      alert("Erro inesperado ao excluir impressora");
+    }
   };
 
   const handleCancel = () => {
@@ -26,33 +39,21 @@ const ModalDeletePrinter = ({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-        <h3 className="text-lg font-semibold text-red-600 mb-4">
-          Confirmar Exclusão
-        </h3>
+        <h3 className="text-lg font-semibold text-red-600 mb-4">Confirmar Exclusão</h3>
 
         <p className="text-sm text-gray-700 mb-6">
-          Tem certeza que deseja excluir esta impressora?
+          Tem certeza que deseja excluir permanentemente a impressora <strong>{printer.name_printer}</strong>?
           <br />
-          <span className="font-semibold text-red-600">
-            Consequências:
-          </span>
-          <br />- A impressora será removida da lista.
-          <br />- Essa ação não pode ser desfeita.
+          Essa ação removerá todos os dados relacionados a essa impressora do banco de dados.
         </p>
 
         <div className="flex justify-end gap-3">
-          <button
-            onClick={handleCancel}
-            className="px-4 py-2 border rounded-md text-black cursor-pointer"
-          >
+          <button onClick={handleCancel} className="px-4 py-2 border rounded-md text-black cursor-pointer">
             Cancelar
           </button>
 
-          <button
-            onClick={handleDelete}
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 font-medium transition-colors cursor-pointer"
-          >
-            Excluir
+          <button onClick={handleDelete} className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 font-medium transition-colors cursor-pointer">
+            Excluir Definitivamente
           </button>
         </div>
       </div>

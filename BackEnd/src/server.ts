@@ -1,5 +1,6 @@
 import express from "express";
 import helmet from "helmet";
+import cors from "cors";
 import { router } from "./routers/index.js";
 
 
@@ -11,6 +12,9 @@ server.use("/uploads", express.static("uploads"));
 
 //Helmet para possibilitar o uso de cabveçalhos:
 server.use(helmet());
+
+// Habilita CORS para permitir requests do front-end
+server.use(cors());
 
 //Abilitando o server para responder em json:
 server.use(express.json());

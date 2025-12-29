@@ -36,7 +36,7 @@ export const middleware = async (request: NextRequest) => {
         console.log("Redirecionando para próxima página");
         //Permite acesso a página:
         return NextResponse.next();
-    }catch(error){
+    }catch{
         //Deleta o cookie inválido e redireciona para a página de login:
         const cookieStore = await cookies()
         cookieStore.delete("authToken");

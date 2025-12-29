@@ -35,7 +35,7 @@ const PrinterItem = ({ printer, modalUpdate }: Props) => {
               : "bg-red-100 text-red-700"
           }`}
         >
-          {printer.status_printer === 1 ? "Ativo" : "Desativado"}
+          {printer.status_printer === 1 ? "Ativo" : "Inativo"}
         </span>
       </td>
 
@@ -70,7 +70,7 @@ const PrinterItem = ({ printer, modalUpdate }: Props) => {
 
       {modalDelete && printer.id_printer !== undefined && (
         <ModalDeletePrinter
-          printer_id={printer.id_printer}
+          printer={printer}
           showModal={setModalDelete}
           updateList={modalUpdate}
         />

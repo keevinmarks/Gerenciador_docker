@@ -1,9 +1,7 @@
 "use server"
-import { User } from "@/types/types";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { use } from "react";
 type UserValidate = {
     name:string;
     password: string;

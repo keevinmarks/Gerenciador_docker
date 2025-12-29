@@ -1,6 +1,6 @@
 "use client"
 import { Computer } from "@/types/types";
-import { Plus, X, Pencil, Trash } from "lucide-react";
+import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { insertComputer, updateComputers } from "@/actions/computersAction";
 type Props = {
@@ -99,7 +99,7 @@ const ModalComputer = ({setShowModal, isEditing, computer, setModalEdit, updateC
         setReason(computer.reason);
         setReturnDate(computer.return_date);
       }
-    },[])
+    },[computer])
     return(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6">

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CheckCircle, XCircle, Monitor, Printer } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 
 type Device = {
   id: string;
@@ -13,14 +13,44 @@ type Device = {
   status: "Ativo" | "Inativo";
 };
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
+/* ======================
+   VARIANTS
+====================== */
+
+const page: Variants = {
+  hidden: { opacity: 0, scale: 0.98 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
 };
 
-const stagger = {
-  visible: { transition: { staggerChildren: 0.08 } },
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 120, damping: 18 },
+  },
 };
+
+const stagger: Variants = {
+  visible: { transition: { staggerChildren: 0.1 } },
+};
+
+const row: Variants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 140, damping: 20 },
+  },
+};
+
+/* ======================
+   COMPONENT
+====================== */
 
 export default function DevicesOnNetwork() {
   const [computadores, setComputadores] = useState<Device[]>([]);
@@ -31,6 +61,7 @@ export default function DevicesOnNetwork() {
       try {
         const res = await fetch("http://localhost:3001/api/devices");
         const data: Device[] = await res.json();
+
         setComputadores(data.filter((d) => d.tipo === "Computador"));
         setImpressoras(data.filter((d) => d.tipo === "Impressora"));
       } catch (error) {
@@ -43,14 +74,23 @@ export default function DevicesOnNetwork() {
     return () => clearInterval(interval);
   }, []);
 
+  const ativos =
+    computadores.filter((c) => c.status === "Ativo").length +
+    impressoras.filter((i) => i.status === "Ativo").length;
+
+  const inativos =
+    computadores.filter((c) => c.status === "Inativo").length +
+    impressoras.filter((i) => i.status === "Inativo").length;
+
   return (
     <motion.div
-      className="p-6 bg-white min-h-screen"
+      className="p-6 bg-gradient-to-br from-gray-50 to-white min-h-screen"
+      variants={page}
       initial="hidden"
       animate="visible"
-      variants={stagger}
     >
-      <motion.header variants={fadeUp} className="mb-8">
+      {/* HEADER */}
+      <motion.header variants={fadeUp} className="mb-10">
         <h1 className="text-3xl font-bold text-gray-900">
           Dispositivos na Rede
         </h1>
@@ -59,9 +99,12 @@ export default function DevicesOnNetwork() {
         </p>
       </motion.header>
 
+      {/* CARDS */}
       <motion.div
+        className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10"
         variants={stagger}
-        className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
+        initial="hidden"
+        animate="visible"
       >
         {[
           {
@@ -76,44 +119,48 @@ export default function DevicesOnNetwork() {
           },
           {
             label: "Ativos",
-            value:
-              computadores.filter((c) => c.status === "Ativo").length +
-              impressoras.filter((i) => i.status === "Ativo").length,
+            value: ativos,
             icon: <CheckCircle className="text-green-600" size={28} />,
           },
           {
             label: "Inativos",
-            value:
-              computadores.filter((c) => c.status === "Inativo").length +
-              impressoras.filter((i) => i.status === "Inativo").length,
+            value: inativos,
             icon: <XCircle className="text-red-600" size={28} />,
           },
         ].map((card, i) => (
           <motion.div
             key={i}
             variants={fadeUp}
-            whileHover={{ scale: 1.04 }}
-            className="bg-white shadow rounded-xl p-5 border flex items-center gap-4"
+            whileHover={{ y: -6 }}
+            className="bg-white shadow-lg rounded-xl p-5 border flex items-center gap-4"
           >
             {card.icon}
             <div>
               <p className="text-gray-600 text-sm">{card.label}</p>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <motion.h2
+                initial={{ scale: 0.85, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 220 }}
+                className="text-2xl font-bold text-gray-900"
+              >
                 {card.value}
-              </h2>
+              </motion.h2>
             </div>
           </motion.div>
         ))}
       </motion.div>
 
+      {/* TABELAS */}
       <motion.div
-        variants={stagger}
         className="grid grid-cols-1 md:grid-cols-2 gap-6"
+        variants={stagger}
+        initial="hidden"
+        animate="visible"
       >
         {/* COMPUTADORES */}
         <motion.div
           variants={fadeUp}
-          className="bg-white shadow-md rounded-lg p-4 border"
+          className="bg-white shadow-lg rounded-xl p-4 border"
         >
           <h2 className="text-lg font-semibold mb-4">Computadores</h2>
 
@@ -127,12 +174,12 @@ export default function DevicesOnNetwork() {
               </tr>
             </thead>
 
-            <motion.tbody variants={stagger}>
+            <motion.tbody variants={stagger} initial="hidden" animate="visible">
               {computadores.map((pc, i) => (
                 <motion.tr
                   key={pc.id}
-                  variants={fadeUp}
-                  whileHover={{ scale: 1.01 }}
+                  variants={row}
+                  whileHover={{ y: -2, backgroundColor: "#f8fafc" }}
                   className={`border-b ${
                     i % 2 === 0 ? "bg-gray-50" : "bg-white"
                   }`}
@@ -160,7 +207,7 @@ export default function DevicesOnNetwork() {
         {/* IMPRESSORAS */}
         <motion.div
           variants={fadeUp}
-          className="bg-white shadow-md rounded-lg p-4 border"
+          className="bg-white shadow-lg rounded-xl p-4 border"
         >
           <h2 className="text-lg font-semibold mb-4">Impressoras</h2>
 
@@ -174,12 +221,12 @@ export default function DevicesOnNetwork() {
               </tr>
             </thead>
 
-            <motion.tbody variants={stagger}>
+            <motion.tbody variants={stagger} initial="hidden" animate="visible">
               {impressoras.map((imp, i) => (
                 <motion.tr
                   key={imp.id}
-                  variants={fadeUp}
-                  whileHover={{ scale: 1.01 }}
+                  variants={row}
+                  whileHover={{ y: -2, backgroundColor: "#f8fafc" }}
                   className={`border-b ${
                     i % 2 === 0 ? "bg-gray-50" : "bg-white"
                   }`}

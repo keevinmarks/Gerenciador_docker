@@ -19,6 +19,8 @@ CREATE TABLE users (
 
   user_name VARCHAR(50) NOT NULL,
   position VARCHAR(50) NOT NULL,
+  email_user VARCHAR(100) DEFAULT NULL,
+  status_user TINYINT(1) NOT NULL DEFAULT 1,
   level_user TINYINT UNSIGNED NOT NULL,
   password_user VARCHAR(255) NOT NULL,
 
@@ -31,7 +33,6 @@ CREATE TABLE users (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB;
 
--- Usuário administrador inicial
 INSERT INTO users
 (user_name, position, level_user, password_user)
 VALUES
@@ -72,15 +73,15 @@ CREATE TABLE computers (
 ) ENGINE=InnoDB;
 
 -- =========================================
--- TABELA PRINTERS
+-- TABELA PRINTERS  ✅ CORRIGIDA
 -- =========================================
-
 DROP TABLE IF EXISTS printers;
 
 CREATE TABLE printers (
   id_printer INT UNSIGNED NOT NULL AUTO_INCREMENT,
 
-  name_printer VARCHAR(50) NOT NULL,
+  name_printer VARCHAR(30) NOT NULL,
+  type_printer VARCHAR(20) NOT NULL,
   mac_printer VARCHAR(30) NOT NULL,
   asset_number BIGINT UNSIGNED NOT NULL,
 
@@ -98,4 +99,3 @@ CREATE TABLE printers (
   UNIQUE KEY uk_printer_asset (asset_number),
   UNIQUE KEY uk_printer_mac (mac_printer)
 ) ENGINE=InnoDB;
--- =========================================

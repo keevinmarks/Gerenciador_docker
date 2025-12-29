@@ -114,6 +114,25 @@ usersRouter.post("/validate", async (req, res) => {
 
 usersRouter.use(authMiddleware);
 
+// Rota para obter dados do usuário autenticado
+usersRouter.get("/me", async (req, res) => {
+    try{
+        const connection: Connection | null = await getConnection();
+        if(!connection){ return res.status(500).json({message: "Erro na conexão", success: false}) }
+
+        const userId = req.user?.id;
+        if(!userId) return res.status(401).json({message: "Usuário não autenticado", success: false});
+
+        const [rows] = await connection.execute<RowDataPacket[]>("SELECT id, user_name, email_user, position, level_user, path_img FROM users WHERE id = ?", [userId]);
+        if(!rows || rows.length === 0) return res.status(404).json({message: "Usuário não encontrado", success: false});
+
+        return res.status(200).json({message: "Usuário autenticado", success: true, data: rows[0]});
+    }catch(error){
+        console.log("Erro em /users/me: ", error);
+        return res.status(500).json({message: "Erro interno", success: false});
+    }
+});
+
 //Rota para pegar os usuários
 usersRouter.get("/", async (req, res) => {
     try{
@@ -225,7 +244,7 @@ usersRouter.put("/",upload.single("avatar"), async (req, res) => {
             res.json({message: "Erro ao tentar atualizar o usuário", success: false});
         }
     }else{
-        return res.status(4.03).json({message: "Você não tem permissão para isso", success: false});
+        return res.status(403).json({message: "Você não tem permissão para isso", success: false});
     }
 });
 
