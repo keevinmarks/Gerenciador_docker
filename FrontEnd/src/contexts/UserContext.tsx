@@ -22,6 +22,8 @@ type User = {
 type UserContextType = {
   user: User | null;
   setUser: (user: User | null) => void;
+  refetchUser: () => Promise<void>;
+  clearUserCache: () => void;
 };
 
 /* ===================== CONTEXT ===================== */
@@ -33,48 +35,71 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
-  useEffect(() => {
-    // Primeiro carrega um valor provisório do localStorage (para evitar piscar vazio),
-    // mas sempre consulta /api/me para garantir que pegamos o usuário atual da sessão.
-    const stored = localStorage.getItem("user");
-    if (stored) {
-      try {
-        setUser(JSON.parse(stored));
-      } catch {
-        // ignore malformed
-      }
-    }
-
-    (async () => {
-      try {
-        const res = await fetch('/api/me');
-        if (!res.ok) return;
-        const json = await res.json();
-        if (json && json.success && json.data) {
-          const resolvedName = json.data.user_name ?? json.data.name ?? json.data.user?.name ?? "";
-          const u = {
-            id: String(json.data.id),
-            name: resolvedName,
-            user_name: json.data.user_name ?? undefined,
-            displayName: resolvedName,
-            path_img: json.data.path_img ?? json.data.user?.path_img ?? null,
-            email: json.data.email_user ?? json.data.email ?? json.data.user?.email ?? "",
-          };
-          setUser(u);
-          try { localStorage.setItem('user', JSON.stringify(u)); } catch { /* ignore */ }
-        } else {
-          // Se /api/me não retornar usuário, limpe o localStorage (sessão inválida)
-          try { localStorage.removeItem('user'); } catch { }
-          setUser(null);
+  const fetchUserData = async () => {
+    try {
+      const res = await fetch('/api/me', { 
+        method: 'GET',
+        cache: 'no-store',
+        credentials: 'include',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
         }
-      } catch {
-        // network error: keep stored user if present
+      });
+      
+      if (!res.ok) {
+        console.log('Erro ao buscar usuário, status:', res.status);
+        try { localStorage.removeItem("user"); } catch { }
+        setUser(null);
+        return;
       }
-    })();
+      
+      const json = await res.json();
+      console.log('Dados do usuário recebidos:', json);
+      
+      if (json && json.success && json.data) {
+        // Prioriza user_name que é o campo correto do banco
+        const resolvedName = json.data.user_name || json.data.name || json.data.displayName || "Usuário";
+        
+        const u: User = {
+          id: String(json.data.id),
+          name: resolvedName,
+          user_name: json.data.user_name || undefined,
+          displayName: resolvedName,
+          path_img: json.data.path_img || null,
+          email: json.data.email_user || json.data.email || "",
+        };
+        
+        console.log('Usuário definido:', u);
+        setUser(u);
+        try { localStorage.setItem('user', JSON.stringify(u)); } catch { /* ignore */ }
+      } else {
+        console.log('Resposta inválida de /api/me:', json);
+        try { localStorage.removeItem('user'); } catch { }
+        setUser(null);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar dados do usuário:', error);
+    }
+  };
+
+  const clearUserCache = () => {
+    try { localStorage.removeItem("user"); } catch { }
+    setUser(null);
+  };
+
+  useEffect(() => {
+    // Sempre faz um fetch fresh dos dados do usuário
+    fetchUserData();
+    
+    // Refaz a busca a cada 3 minutos para garantir sincronização
+    const interval = setInterval(fetchUserData, 3 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, setUser }}>
+    <UserContext.Provider value={{ user, setUser, refetchUser: fetchUserData, clearUserCache }}>
       {children}
     </UserContext.Provider>
   );

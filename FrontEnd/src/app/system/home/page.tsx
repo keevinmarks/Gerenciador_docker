@@ -14,6 +14,8 @@ import { Printer } from "@/types/types";
 import { motion, AnimatePresence } from "framer-motion";
 import { getPrinters } from "@/actions/printersAction";
 import { getComputers } from "@/actions/computersAction";
+import { useUser } from "@/contexts/UserContext";
+import TutorialCard from "@/components/system/TutorialCard";
 
 type Device = {
   id: string;
@@ -31,6 +33,8 @@ export default function Dashboard() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
   const [printers, setPrinters] = useState<Printer[]>([]);
+  const { user } = useUser();
+  const [showTutorial, setShowTutorial] = useState(false);
 
   const fetchDevices = async () => {
     try {
@@ -68,6 +72,8 @@ export default function Dashboard() {
   useEffect(() => {
     fetchDevices();
     fetchPrinters();
+    const seen = sessionStorage.getItem("homeTutorialSeen");
+    if (!seen) setShowTutorial(true);
     const interval = setInterval(() => {
       fetchDevices();
       fetchPrinters();
@@ -104,9 +110,31 @@ export default function Dashboard() {
 
   return (
     <motion.div className="p-6 bg-white min-h-screen">
-      <h1 className="text-3xl font-bold mb-6">
-        Dashboard de Dispositivos
-      </h1>
+      {/* Tutorial (render only when requested) */}
+      {showTutorial && <TutorialCard />}
+
+      {/* Banner de boas-vindas */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl p-6 mb-6 shadow-md">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold">Olá, Seja Bem Vindo {user?.displayName || user?.user_name || user?.name || 'Usuário'} </h2>
+            <p className="text-sm text-blue-100 mt-1"></p>
+          </div>
+          <div className="text-sm text-blue-100">
+            <button
+              onClick={() => {
+                sessionStorage.removeItem("homeTutorialSeen");
+                setShowTutorial(true);
+              }}
+              className="font-medium hover:underline"
+            >
+              
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <h1 className="text-3xl font-bold mb-6 text-slate-900">Dashboard de Dispositivos</h1>
 
       {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -118,18 +146,18 @@ export default function Dashboard() {
         ].map(([label, value]) => (
           <div
             key={label}
-            className="bg-white shadow rounded-xl p-5 border"
+            className="bg-white shadow rounded-xl p-5 border border-black/10"
           >
-            <p className="text-sm text-gray-600">{label}</p>
-            <p className="text-2xl font-bold">{value}</p>
+            <p className="text-sm text-slate-600">{label}</p>
+            <p className="text-2xl font-bold text-slate-900">{value}</p>
           </div>
         ))}
       </div>
 
       {/* Gráficos */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white shadow rounded-xl p-6 border">
-          <h3 className="font-medium mb-3">Computadores (Ativos / Inativos)</h3>
+        <div className="bg-white shadow rounded-xl p-6 border border-black/10">
+          <h3 className="font-medium mb-3 text-slate-800">Computadores (Ativos / Inativos)</h3>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie data={statusData} dataKey="value" innerRadius={55}>
@@ -143,8 +171,8 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-white shadow rounded-xl p-6 border">
-          <h3 className="font-medium mb-3">Impressoras (Ativas / Inativas)</h3>
+        <div className="bg-white shadow rounded-xl p-6 border border-black/10">
+          <h3 className="font-medium mb-3 text-slate-800">Impressoras (Ativas / Inativas)</h3>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie data={printersStatusData} dataKey="value" innerRadius={55}>
@@ -162,11 +190,11 @@ export default function Dashboard() {
       {/* Tabelas */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {[computadores, impressoras].map((list, i) => (
-          <div key={i} className="bg-white shadow p-4 border rounded-lg">
-            <h2 className="font-semibold mb-4">
+          <div key={i} className="bg-white shadow p-4 border border-black/10 rounded-lg">
+            <h2 className="font-semibold mb-4 text-slate-800">
               {i === 0 ? "Computadores" : "Impressoras"}
             </h2>
-            <table className="w-full text-sm">
+            <table className="w-full text-sm text-slate-700">
               <tbody>
                 <AnimatePresence>
                   {i === 0

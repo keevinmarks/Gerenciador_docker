@@ -124,14 +124,14 @@ const ModalPrinter = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 border border-black/5">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-blue-700">
+          <h3 className="text-lg font-semibold text-slate-900">
             {isEditing ? "Editar Impressora" : "Adicionar Impressora"}
           </h3>
 
-          <button onClick={() => setShowModal(false)}>
+          <button onClick={() => setShowModal(false)} className="text-slate-500 hover:text-slate-700">
             <X />
           </button>
         </div>
@@ -141,7 +141,7 @@ const ModalPrinter = ({
             placeholder="Nome"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full border rounded-md px-3 py-2"
+            className="w-full border border-gray-200 rounded-md px-3 py-2 bg-white text-slate-900 placeholder:text-slate-400"
           />
           {nameError && <p className="text-sm text-red-600 mt-1">{nameError}</p>}
 
@@ -149,7 +149,7 @@ const ModalPrinter = ({
             placeholder="Tipo"
             value={type}
             onChange={(e) => setType(e.target.value)}
-            className="w-full border rounded-md px-3 py-2"
+            className="w-full border border-gray-200 rounded-md px-3 py-2 bg-white text-slate-900 placeholder:text-slate-400"
           />
           {typeError && <p className="text-sm text-red-600 mt-1">{typeError}</p>}
 
@@ -157,7 +157,7 @@ const ModalPrinter = ({
             placeholder="MAC"
             value={mac}
             onChange={(e) => setMac(e.target.value)}
-            className="w-full border rounded-md px-3 py-2"
+            className="w-full border border-gray-200 rounded-md px-3 py-2 bg-white text-slate-900 placeholder:text-slate-400"
           />
           {macError && <p className="text-sm text-red-600 mt-1">{macError}</p>}
 
@@ -166,27 +166,25 @@ const ModalPrinter = ({
             placeholder="Tombo"
             value={asset}
             onChange={(e) => setAsset(e.target.value)}
-            className="w-full border rounded-md px-3 py-2"
+            className="w-full border border-gray-200 rounded-md px-3 py-2 bg-white text-slate-900 placeholder:text-slate-400"
           />
           {assetError && <p className="text-sm text-red-600 mt-1">{assetError}</p>}
 
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as "Ativo" | "Inativo")}
-            className="w-full border rounded-md px-3 py-2"
+            className="w-full border border-gray-200 rounded-md px-3 py-2 bg-white text-slate-900"
           >
             <option value="Ativo">Ativo</option>
             <option value="Inativo">Inativo</option>
           </select>
 
           <div className="flex justify-end gap-3">
-            <button onClick={() => setShowModal(false)}>
-              Cancelar
-            </button>
+            <button onClick={() => setShowModal(false)} className="px-4 py-2 rounded-md text-slate-700 border border-transparent hover:border-gray-200">Cancelar</button>
 
             <button
               onClick={handleSave}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md"
+              className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-sm hover:brightness-95"
             >
               {isEditing ? "Salvar" : "Adicionar"}
             </button>

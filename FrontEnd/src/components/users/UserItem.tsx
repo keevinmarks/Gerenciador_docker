@@ -5,6 +5,7 @@ import { useState } from "react";
 import ModalUser from "./ModalUser";
 import ShowModalDelete from "./ShowModalDelete";
 import { motion } from "framer-motion";
+import { deleteUser } from "@/actions/userAction";
 
 type Props = {
   user: User;
@@ -24,13 +25,20 @@ const UserItem = ({ user, getUsers }: Props) => {
   };
 
   const handleConfirmDelete = async () => {
-    console.log("Deletar usuário:", user.id);
-
-    // 👉 aqui você chama sua API de delete
-    // await deleteUser(user.id)
-
-    setShowModalDelete(false);
-    getUsers();
+    if (!user.id) return;
+    
+    try {
+      const response = await deleteUser(user.id);
+      if (response.success) {
+        setShowModalDelete(false);
+        getUsers();
+      } else {
+        alert(response.message || "Erro ao deletar usuário");
+      }
+    } catch (error) {
+      console.error("Erro ao deletar:", error);
+      alert("Erro ao deletar usuário");
+    }
   };
 
   return (
