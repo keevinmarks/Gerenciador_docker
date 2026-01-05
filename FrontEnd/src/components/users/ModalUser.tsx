@@ -1,8 +1,10 @@
 import { insertUsers, updateUsers } from "@/actions/userAction";
+import { addUserHistory, type UserHistWithActor } from "@/actions/historyAction";
 import { User } from "@/types/types";
 import { X } from "lucide-react";
 import { useEffect, useState, ChangeEvent } from "react";
 import { motion } from "framer-motion";
+import { useUser } from "@/contexts/UserContext";
 
 type Props = {
   showModal: (value:boolean) => void;
@@ -17,11 +19,13 @@ const ModalUser = ({showModal, editingUser, user, getUsers}:Props) => {
   const [position, setPosition] = useState<string>("");
   const [level, setLevel] = useState<string>("");
   const [status, setStatus] = useState<string>("");
+  const [prevStatus, setPrevStatus] = useState<number | null>(null);
   const [password, setPassword] = useState<string>("");
   const [repassword, setRePassword] = useState<boolean>(false);
   
   // NOVO: State para guardar o arquivo da imagem selecionada
   const [image, setImage] = useState<File | null>(null);
+  const { user: actor } = useUser();
 
   useEffect(() => {
     if(editingUser && user){
@@ -30,6 +34,7 @@ const ModalUser = ({showModal, editingUser, user, getUsers}:Props) => {
       setEmail(user.email_user);
       setLevel(user.level_user === 2? "Administrador":"Usuário");
       setStatus(user.status_user === 1? "Ativo": "Desativado");
+  setPrevStatus(user.status_user ?? null);
       setRePassword(user.reset_password === 1? true : false);
       // Não setamos a imagem aqui, pois o input de arquivo é 'uncontrolled'
       // O usuário terá que selecionar uma nova imagem se quiser alterar.
@@ -74,6 +79,23 @@ const ModalUser = ({showModal, editingUser, user, getUsers}:Props) => {
       }
 
       await insertUsers(formData); // Envia FormData
+      // registra criação no histórico (actor se disponível)
+      try{
+        const entry: Omit<UserHistWithActor, "when"> = {
+          id: null,
+          nome: name,
+          email: email,
+          nivel: level === "Administrador" ? "Administrador" : "Usuário",
+          status: status === "Ativo" ? "Ativo" : "Inativo",
+          motivo: "Criado",
+          actorId: actor?.id ?? null,
+          actorName: actor?.user_name ?? actor?.displayName ?? actor?.name ?? null,
+          action: "Criado",
+        };
+        addUserHistory(entry);
+      }catch(err){
+        console.warn('add user create history failed', err);
+      }
 
     } else {
       // --- Bloco de ATUALIZAÇÃO ---
@@ -112,8 +134,49 @@ const ModalUser = ({showModal, editingUser, user, getUsers}:Props) => {
     }
     
     // Este código é executado para ambos (criação e atualização)
-    await getUsers();
-    showModal(false);
+    // after save, if updating and status changed to Ativo, add to history
+    try{
+      if(editingUser){
+        const newStatusNum = status === "Ativo" ? 1 : 0;
+        if(prevStatus !== null && prevStatus !== newStatusNum && newStatusNum === 1){
+          const entry: Omit<UserHistWithActor, "when"> = {
+            id: user?.id ?? null,
+            nome: name,
+            email: email,
+            nivel: level === "Administrador" ? "Administrador" : "Usuário",
+            status: "Ativo",
+            motivo: "Ativado",
+            actorId: actor?.id ?? null,
+            actorName: actor?.user_name ?? actor?.displayName ?? actor?.name ?? null,
+            action: "Ativado",
+          };
+          addUserHistory(entry);
+        }
+
+        // always record an edit action when editing a user
+        try{
+          const entry: Omit<UserHistWithActor, "when"> = {
+            id: user?.id ?? null,
+            nome: name,
+            email: email,
+            nivel: level === "Administrador" ? "Administrador" : "Usuário",
+            status: status,
+            motivo: "Editado",
+            actorId: actor?.id ?? null,
+            actorName: actor?.user_name ?? actor?.displayName ?? actor?.name ?? null,
+            action: "Editado",
+          };
+          addUserHistory(entry);
+        }catch(err){
+          console.warn('add user edit history failed', err);
+        }
+      }
+    }catch(err){
+      console.warn('add user history failed', err);
+    }
+
+    await getUsers();
+    showModal(false);
   };
 
   return (

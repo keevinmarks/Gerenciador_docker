@@ -1,14 +1,36 @@
 import { deleteComputer } from "@/actions/computersAction";
+import { addComputerHistory } from "@/actions/historyAction";
+import { Computer } from "@/types/types";
+import { useUser } from "@/contexts/UserContext";
 
 type Props = {
   updateList: () => void;
   showModal: (value:boolean) => void;
-  computer_id: number;
+  computer: Computer;
 }
-const ModalDeltete = ({showModal, computer_id, updateList}:Props) => {
+const ModalDeltete = ({showModal, computer, updateList}:Props) => {
+    const { user: actor } = useUser();
 
     const handleDelete = async () => {
-      await deleteComputer(computer_id);
+      try {
+        addComputerHistory({
+          id: computer.id_computer ?? null,
+          tipo: computer.type_computer,
+          nome: computer.name_computer,
+          mac: computer.mac_computer,
+          tombo: computer.asset_number,
+          Problema: undefined,
+          status: computer.status_computer === 1 ? "Ativo" : "Desativado",
+          motivo: "Excluído",
+          actorId: actor?.id ?? null,
+          actorName: actor?.user_name ?? actor?.displayName ?? actor?.name ?? null,
+          action: "Excluído",
+        });
+      } catch (err) {
+        console.warn("history add failed", err);
+      }
+
+      await deleteComputer(computer.id_computer as number);
       await updateList();
       showModal(false);
     }

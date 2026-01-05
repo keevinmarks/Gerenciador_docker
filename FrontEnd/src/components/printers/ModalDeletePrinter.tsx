@@ -2,6 +2,8 @@
 
 import { deletePrinter } from "@/actions/printersAction";
 import { Printer } from "@/types/types";
+import { addPrinterHistory } from "@/actions/historyAction";
+import { useUser } from "@/contexts/UserContext";
 
 type Props = {
   updateList: () => void;
@@ -10,13 +12,33 @@ type Props = {
 };
 
 const ModalDeletePrinter = ({ showModal, printer, updateList }: Props) => {
+  const { user: actor } = useUser();
   const handleDelete = async () => {
     if (!printer.id_printer) {
       alert("ID da impressora inválido");
       return;
     }
 
-    try {
+      try {
+        // add to local history before removing
+        try {
+          addPrinterHistory({
+            id: printer.id_printer ?? null,
+            tipo: printer.type_printer,
+            nome: printer.name_printer,
+            mac: printer.mac_printer,
+            tombo: printer.asset_number,
+            Problema: undefined,
+            status: printer.status_printer === 1 ? "Ativo" : "Inativo",
+            motivo: "Excluído",
+            actorId: actor?.id ?? null,
+            actorName: actor?.user_name ?? actor?.displayName ?? actor?.name ?? null,
+            action: "Excluído",
+          });
+        } catch (err) {
+          console.warn("history add failed", err);
+        }
+
       const resp = await deletePrinter(printer.id_printer);
       console.debug("deletePrinter response:", resp);
       if (!resp || !resp.success) {

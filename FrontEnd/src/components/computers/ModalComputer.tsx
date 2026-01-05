@@ -3,6 +3,8 @@ import { Computer } from "@/types/types";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { insertComputer, updateComputers } from "@/actions/computersAction";
+import { addComputerHistory } from "@/actions/historyAction";
+import { useUser } from "@/contexts/UserContext";
 type Props = {
     updateComputerList: () => void;
     setModalEdit?: (value: boolean) => void; 
@@ -11,12 +13,14 @@ type Props = {
     computer?:Computer;
 }
 const ModalComputer = ({setShowModal, isEditing, computer, setModalEdit, updateComputerList}:Props) => {
+  const { user } = useUser();
     const [idComputer, setIdComputer] = useState<number | null>(null);
     const [type, setType] = useState<string>("");
     const [name, setName] = useState<string>("");
     const [mac, setMac] = useState<string>("");
     const [assetNumber, setAssetNumber] = useState<number>();
     const [status, setStatus] = useState<string>("");
+    const [prevStatus, setPrevStatus] = useState<number | null>(null);
     const [exitDate, setExitDate] = useState<string | null>(null);
     const [reason, setReason] = useState<string>("");
     const [returnDate, setReturnDate] = useState<string | null>(null);
@@ -80,6 +84,47 @@ const ModalComputer = ({setShowModal, isEditing, computer, setModalEdit, updateC
         }
 
         await updateComputers(computer);
+        // if status changed to Ativo, add to local history
+            try{
+              const newStatus = computer.status_computer === 1 ? 1 : 0;
+              if(prevStatus !== null && prevStatus !== newStatus && newStatus === 1){
+                addComputerHistory({
+                  id: computer.id_computer ?? null,
+                  tipo: computer.type_computer,
+                  nome: computer.name_computer,
+                  mac: computer.mac_computer,
+                  tombo: computer.asset_number,
+                  Problema: undefined,
+                  status: "Ativo",
+                  motivo: "Ativado",
+                  actorId: user?.id ?? null,
+                  actorName: user?.user_name ?? user?.displayName ?? user?.name ?? null,
+                  action: "Ativado",
+                });
+              }
+            }catch(err){
+              console.warn("add history failed", err);
+            }
+
+            // record generic edit action for audits
+            try{
+              addComputerHistory({
+                id: computer.id_computer ?? null,
+                tipo: computer.type_computer,
+                nome: computer.name_computer,
+                mac: computer.mac_computer,
+                tombo: computer.asset_number,
+                Problema: undefined,
+                status: computer.status_computer === 1 ? "Ativo" : "Desativado",
+                motivo: "Editado",
+                actorId: user?.id ?? null,
+                actorName: user?.user_name ?? user?.displayName ?? user?.name ?? null,
+                action: "Editado",
+              });
+            }catch(err){
+              console.warn("add history edit failed", err);
+            }
+
         await updateComputerList();
         if(setModalEdit){
           setModalEdit(false);
@@ -95,6 +140,7 @@ const ModalComputer = ({setShowModal, isEditing, computer, setModalEdit, updateC
         setType(computer.type_computer);
         setAssetNumber(computer.asset_number);
         setStatus(computer.status_computer == 1? "Ativo": "Desativado");
+        setPrevStatus(computer.status_computer ?? null);
         setExitDate(computer.exit_date);
         setReason(computer.reason);
         setReturnDate(computer.return_date);

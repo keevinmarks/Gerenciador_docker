@@ -1,3 +1,5 @@
+"use client";
+
 import { User } from "@/types/types";
 import { Pencil, Trash, Plus } from "lucide-react";
 import Image from "next/image";
@@ -6,6 +8,8 @@ import ModalUser from "./ModalUser";
 import ShowModalDelete from "./ShowModalDelete";
 import { motion } from "framer-motion";
 import { deleteUser } from "@/actions/userAction";
+import { useUser } from "@/contexts/UserContext";
+import { addUserHistory, type UserHistWithActor } from "@/actions/historyAction";
 
 type Props = {
   user: User;
@@ -15,6 +19,7 @@ type Props = {
 const UserItem = ({ user, getUsers }: Props) => {
   const [showModal, setShowModal] = useState(false);
   const [showModalDelete, setShowModalDelete] = useState(false);
+  const { user: actor } = useUser();
 
   const handleEdit = () => {
     setShowModal(true);
@@ -28,6 +33,24 @@ const UserItem = ({ user, getUsers }: Props) => {
     if (!user.id) return;
     
     try {
+      // record to local history before deletion (include actor)
+      try{
+        const entry: Omit<UserHistWithActor, "when"> = {
+          id: user.id ?? null,
+          nome: user.user_name,
+          email: user.email_user,
+          nivel: user.level_user === 2 ? "Administrador" : "Usuário",
+          status: user.status_user === 1 ? "Ativo" : "Inativo",
+          motivo: "Excluído",
+          actorId: actor?.id ?? null,
+          actorName: actor?.user_name ?? actor?.displayName ?? actor?.name ?? null,
+          action: "Excluído",
+        };
+        addUserHistory(entry);
+      }catch(err){
+        console.warn('failed to add user history', err);
+      }
+
       const response = await deleteUser(user.id);
       if (response.success) {
         setShowModalDelete(false);

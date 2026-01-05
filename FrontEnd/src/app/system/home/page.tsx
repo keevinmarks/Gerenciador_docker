@@ -214,7 +214,6 @@ export default function Dashboard() {
                             )}
                           </td>
                           <td className="py-2 text-right">
-                            <Pencil size={16} />
                           </td>
                         </motion.tr>
                       ))
@@ -235,7 +234,6 @@ export default function Dashboard() {
                             )}
                           </td>
                           <td className="py-2 text-right">
-                            <Pencil size={16} />
                           </td>
                         </motion.tr>
                       ))}

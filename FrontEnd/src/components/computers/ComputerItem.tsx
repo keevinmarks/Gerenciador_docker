@@ -63,7 +63,7 @@ const ComputerItem = ({computer, modalUpdate}:Props) => {
             </button>
             </td>
             {modalEdit && <ModalComputer isEditing={true} computer={computer} setModalEdit={setModalEdit} updateComputerList={modalUpdate}/>}
-            {modalDelete && <ModalDelete computer_id={computer.id_computer as number} showModal={setModalDelete} updateList={modalUpdate}/>}
+            {modalDelete && <ModalDelete computer={computer} showModal={setModalDelete} updateList={modalUpdate}/>}
         </tr>
     )
 }

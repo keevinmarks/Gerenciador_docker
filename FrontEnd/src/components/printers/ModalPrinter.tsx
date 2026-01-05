@@ -4,6 +4,7 @@ import { Printer } from "@/types/types";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { insertPrinter, updatePrinter } from "@/actions/printersAction";
+import { addPrinterHistory } from "@/actions/historyAction";
 import { useUser } from "@/contexts/UserContext";
 
 type Props = {
@@ -28,6 +29,7 @@ const ModalPrinter = ({
   const [macError, setMacError] = useState<string | null>(null);
   const [assetError, setAssetError] = useState<string | null>(null);
   const [status, setStatus] = useState<"Ativo" | "Inativo">("Ativo");
+  const [prevStatus, setPrevStatus] = useState<number | null>(null);
   const [exitDate, setExitDate] = useState<string | null>(null);
   const [reason, setReason] = useState("");
   const [returnDate, setReturnDate] = useState<string | null>(null);
@@ -39,6 +41,7 @@ const ModalPrinter = ({
       setMac(printer.mac_printer);
       setAsset(String(printer.asset_number));
       setStatus(printer.status_printer === 1 ? "Ativo" : "Inativo");
+      setPrevStatus(printer.status_printer ?? null);
       setExitDate(printer.exit_date ?? null);
       setReason(printer.reason ?? "");
       setReturnDate(printer.return_date ?? null);
@@ -94,6 +97,46 @@ const ModalPrinter = ({
         if (!resp.success) {
           alert(resp.message || "Erro ao atualizar impressora");
           return;
+        }
+        // if status changed to Ativo, add to local history
+        try{
+          const newStatus = payload.status_printer === 1 ? 1 : 0;
+          if(prevStatus !== null && prevStatus !== newStatus && newStatus === 1){
+            addPrinterHistory({
+              id: printer.id_printer ?? null,
+              tipo: printer.type_printer,
+              nome: printer.name_printer,
+              mac: printer.mac_printer,
+              tombo: printer.asset_number,
+              Problema: undefined,
+              status: "Ativo",
+              motivo: "Ativado",
+              actorId: user?.id ?? null,
+              actorName: user?.user_name ?? user?.displayName ?? user?.name ?? null,
+              action: "Ativado",
+            });
+          }
+        }catch(err){
+          console.warn("add history failed", err);
+        }
+
+        // record generic edit action
+        try{
+          addPrinterHistory({
+            id: printer.id_printer ?? null,
+            tipo: printer.type_printer,
+            nome: printer.name_printer,
+            mac: printer.mac_printer,
+            tombo: printer.asset_number,
+            Problema: undefined,
+            status: payload.status_printer === 1 ? "Ativo" : "Inativo",
+            motivo: "Editado",
+            actorId: user?.id ?? null,
+            actorName: user?.user_name ?? user?.displayName ?? user?.name ?? null,
+            action: "Editado",
+          });
+        }catch(err){
+          console.warn('add printer edit history failed', err);
         }
       } else {
         const payload: Omit<Printer, "id_printer"> = {

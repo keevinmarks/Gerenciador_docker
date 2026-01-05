@@ -1,21 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, X } from "lucide-react";
-import Image from "next/image";
-import { motion, AnimatePresence, type Variants } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, type Variants } from "framer-motion";
+import { getComputerHistory, getPrinterHistory, getUserHistory } from "@/actions/historyAction";
 
-type Computer = {
-  id: number;
-  tipo: string;
+type UnifiedHist = {
+  id?: string | number | null;
+  source: "Computador" | "Impressora" | "Usuário";
   nome: string;
-  mac: string;
-  tombo: string;
-  Problema: string;
-  status: "Manutenção" | "Retirado";
-  dataSaida: string | null;
-  motivoSaida: string | null;
-  dataRetorno: string | null;
+  tipo?: string | null;
+  mac?: string | null;
+  tombo?: string | number | null;
+  problema?: string | null;
+  status?: string | null;
+  motivo?: string | null;
+  action?: string | null;
+  actorName?: string | null;
+  when: string;
 };
 
 /* ======================
@@ -44,56 +45,116 @@ const stagger: Variants = {
   visible: { transition: { staggerChildren: 0.08 } },
 };
 
-const modal: Variants = {
-  hidden: { opacity: 0, scale: 0.9, y: 20 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    y: 0,
-    transition: { type: "spring", stiffness: 160, damping: 20 },
-  },
-  exit: { opacity: 0, scale: 0.9, y: 20 },
+const item: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.18 } },
 };
+
+// modal variants removed (history page is read-only)
 
 /* ======================
    COMPONENT
 ====================== */
 
 const ComputerList = () => {
-  const [computers] = useState<Computer[]>([
-    {
-      id: 1,
-      tipo: "Positivo",
-      nome: "One All in Positive 6200",
-      mac: "00:1A:2B:3C:4D:5E",
-      tombo: "9999",
-      Problema: "Tela Azul",
-      status: "Manutenção",
-      dataSaida: null,
-      motivoSaida: "Manutenção",
-      dataRetorno: null,
-    },
-    {
-      id: 2,
-      tipo: "Compaq",
-      nome: "One All in Compaq 5000",
-      mac: "00:AA:BB:CC:DD:EE",
-      tombo: "8888",
-      Problema: "Placa Mãe Queimada",
-      status: "Retirado",
-      dataSaida: "29/02/2025",
-      motivoSaida: "RETIRE",
-      dataRetorno: null,
-    },
-  ]);
+  const [merged, setMerged] = useState<UnifiedHist[]>([]);
 
-  const [selectedComputer, setSelectedComputer] =
-    useState<Computer | null>(null);
+  useEffect(() => {
+    const cs = getComputerHistory();
+    const ps = getPrinterHistory();
 
-  const getImage = (tipo: string) => {
-    if (tipo.toLowerCase().includes("positivo")) return "/images/positivo.png";
-    if (tipo.toLowerCase().includes("compaq")) return "/images/compaq.png";
-    return "/images/default.png";
+    const us = getUserHistory();
+
+    const mappedComputers: UnifiedHist[] = cs.map((h) => ({
+      id: h.id ?? null,
+      source: "Computador",
+      nome: h.nome ?? "-",
+      tipo: h.tipo ?? "-",
+      mac: h.mac ?? "-",
+      tombo: h.tombo ?? null,
+      problema: h.Problema ?? null,
+      status: h.status ?? "-",
+      motivo: h.motivo ?? null,
+      action: h.action ?? h.motivo ?? null,
+      actorName: h.actorName ?? null,
+      when: h.when ?? new Date().toISOString(),
+    }));
+
+    const mappedPrinters: UnifiedHist[] = ps.map((h) => ({
+      id: h.id ?? null,
+      source: "Impressora",
+      nome: h.nome ?? "-",
+      tipo: h.tipo ?? "-",
+      mac: h.mac ?? "-",
+      tombo: h.tombo ?? null,
+      problema: h.Problema ?? null,
+      status: h.status ?? "-",
+      motivo: h.motivo ?? null,
+      action: h.action ?? h.motivo ?? null,
+      actorName: h.actorName ?? null,
+      when: h.when ?? new Date().toISOString(),
+    }));
+
+    const mappedUsers: UnifiedHist[] = us.map((h) => ({
+      id: h.id ?? null,
+      source: "Usuário",
+      nome: h.nome ?? "-",
+      tipo: null,
+      mac: null,
+      tombo: null,
+      problema: null,
+      status: h.status ?? "-",
+      motivo: h.motivo ?? null,
+      action: h.action ?? h.motivo ?? null,
+      actorName: h.actorName ?? null,
+      when: h.when ?? new Date().toISOString(),
+    }));
+
+    const combined = [...mappedComputers, ...mappedPrinters, ...mappedUsers].sort((a, b) => {
+      const ta = new Date(a.when).getTime();
+      const tb = new Date(b.when).getTime();
+      return tb - ta;
+    });
+
+    // keep only merged timeline
+    setMerged(combined);
+  }, []);
+
+  // read-only history page — images not used here
+
+  const formatDate = (v?: string) => (v ? new Date(v).toLocaleString() : "-");
+
+  const counts = {
+    computadores: merged.filter((m) => m.source === "Computador").length,
+    impressoras: merged.filter((m) => m.source === "Impressora").length,
+    usuarios: merged.filter((m) => m.source === "Usuário").length,
+  };
+
+  type Tab = "Todos" | UnifiedHist["source"];
+  const [selected, setSelected] = useState<Tab>("Todos");
+
+  const visible = selected === "Todos" ? merged : merged.filter((m) => m.source === (selected as UnifiedHist["source"]));
+
+  const tabCount = (t: Tab) => {
+    if (t === "Todos") return merged.length;
+    if (t === "Computador") return counts.computadores;
+    if (t === "Impressora") return counts.impressoras;
+    return counts.usuarios;
+  };
+
+  const sourceBadge = (s: UnifiedHist["source"]) => {
+    if (s === "Computador") return "bg-indigo-100 text-indigo-800";
+    if (s === "Impressora") return "bg-green-100 text-green-800";
+    return "bg-yellow-100 text-yellow-800";
+  };
+
+  const actionBadge = (a?: string | null) => {
+    if (!a) return "bg-gray-100 text-gray-800";
+    const key = String(a).toLowerCase();
+    if (key.includes("excl")) return "bg-red-100 text-red-800";
+    if (key.includes("ativ") || key.includes("ativo")) return "bg-emerald-100 text-emerald-800";
+    if (key.includes("edit")) return "bg-amber-100 text-amber-800";
+    return "bg-blue-100 text-blue-800";
   };
 
   return (
@@ -103,140 +164,95 @@ const ComputerList = () => {
       initial="hidden"
       animate="visible"
     >
-      <motion.h1
-        variants={fadeUp}
-        className="text-3xl font-bold mb-8"
-      >
-        Histórico de Computadores
-      </motion.h1>
-
-      <motion.div
-        variants={fadeUp}
-        className="bg-white rounded-2xl shadow-xl p-6 border border-gray-200"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-700">Histórico</h2>
-          <Plus className="w-4 h-4 text-gray-600" />
+      <motion.div className="flex items-center justify-between mb-4" variants={fadeUp}>
+        <div>
+          <h1 className="text-3xl font-bold">Histórico Unificado</h1>
+          <p className="text-sm text-gray-600">Registro imutável de ações no sistema.</p>
         </div>
 
+        <div className="flex flex-col items-end gap-3">
+          <div className="flex items-center gap-2">
+            {(["Todos", "Computador", "Impressora", "Usuário"] as Tab[]).map((t) => (
+              <button
+                key={t}
+                onClick={() => setSelected(t)}
+                className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 ${selected === t ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"}`}
+              >
+                <span>{t}</span>
+                <span className="text-xs opacity-80">({tabCount(t)})</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex gap-3">
+          <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 text-sm">
+            <div className="text-xs text-gray-500">Total</div>
+            <div className="font-semibold text-gray-800">{visible.length}</div>
+          </div>
+          <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 text-sm">
+            <div className="text-xs text-gray-500">Computadores</div>
+            <div className="font-semibold text-indigo-700">{counts.computadores}</div>
+          </div>
+          <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 text-sm">
+            <div className="text-xs text-gray-500">Impressoras</div>
+            <div className="font-semibold text-green-700">{counts.impressoras}</div>
+          </div>
+          <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 text-sm">
+            <div className="text-xs text-gray-500">Usuários</div>
+            <div className="font-semibold text-yellow-700">{counts.usuarios}</div>
+          </div>
+        </div>
+        </div>
+      </motion.div>
+
+      <motion.div variants={fadeUp} className="bg-white rounded-2xl shadow-xl p-4 border border-gray-200">
         <div className="overflow-x-auto">
-          <table className="w-full border border-gray-200">
+          <table className="w-full table-auto">
             <thead>
-              <tr className="bg-blue-50 text-sm">
-                <th className="py-3 px-4">Tipo</th>
-                <th className="py-3 px-4">Nome</th>
-                <th className="py-3 px-4">MAC</th>
-                <th className="py-3 px-4">Tombo</th>
-                <th className="py-3 px-4">Problema</th>
-                <th className="py-3 px-4">Status</th>
+              <tr className="text-sm text-left text-gray-600 border-b">
+                <th className="py-3 px-4">Data</th>
+                <th className="py-3 px-4">Origem</th>
+                <th className="py-3 px-4">Ação</th>
+                <th className="py-3 px-4">Nome / Item</th>
+                <th className="py-3 px-4">Detalhes</th>
+                <th className="py-3 px-4">Responsável</th>
+                <th className="py-3 px-4">Motivo</th>
               </tr>
             </thead>
 
-            <motion.tbody
-              variants={stagger}
-              initial="hidden"
-              animate="visible"
-              layout
-              className="text-sm divide-y"
-            >
-              {computers.map((pc) => (
-                <motion.tr
-                  key={pc.id}
-                  variants={fadeUp}
-                  layout
-                  whileHover={{ y: -2, boxShadow: "0 6px 14px rgba(0,0,0,0.08)" }}
-                  onClick={() => setSelectedComputer(pc)}
-                  className="cursor-pointer bg-white hover:bg-blue-50/60"
-                >
-                  <td className="py-3 px-4">{pc.tipo}</td>
-                  <td className="py-3 px-4">{pc.nome}</td>
-                  <td className="py-3 px-4">{pc.mac}</td>
-                  <td className="py-3 px-4">{pc.tombo}</td>
-                  <td className="py-3 px-4">{pc.Problema}</td>
-                  <td className="py-3 px-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        pc.status === "Manutenção"
-                          ? "bg-yellow-200 text-yellow-700"
-                          : "bg-red-300 text-red-800"
-                      }`}
-                    >
-                      {pc.status}
-                    </span>
+            <motion.tbody className="text-sm" variants={stagger} initial="hidden" animate="visible">
+              {visible.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="py-8 px-4 text-center text-gray-500">Nenhum registro no histórico</td>
+                </tr>
+              )}
+
+              {visible.map((r, i) => (
+                <motion.tr key={`${String(r.id)}-${i}`} variants={item} className="hover:bg-gray-50 even:bg-gray-50">
+                  <td className="py-3 px-4 align-top w-36">{formatDate(r.when)}</td>
+                  <td className="py-3 px-4 align-top">
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${sourceBadge(r.source)}`}>{r.source}</span>
                   </td>
+                  <td className="py-3 px-4 align-top">
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${actionBadge(r.action)}`}>{r.action ?? "-"}</span>
+                  </td>
+                  <td className="py-3 px-4 align-top font-medium">{r.nome}</td>
+                  <td className="py-3 px-4 align-top">
+                    <div className="text-gray-600 text-xs space-y-1">
+                      {r.tipo ? <div>Tipo: {r.tipo}</div> : null}
+                      {r.mac ? <div>MAC: {r.mac}</div> : null}
+                      {r.tombo ? <div>Tombo: {r.tombo}</div> : null}
+                      {r.status ? <div>Status: {r.status}</div> : null}
+                    </div>
+                  </td>
+                  <td className="py-3 px-4 align-top">{r.actorName ?? "-"}</td>
+                  <td className="py-3 px-4 align-top">{r.motivo ?? "-"}</td>
                 </motion.tr>
               ))}
             </motion.tbody>
           </table>
         </div>
       </motion.div>
-
-      {/* MODAL */}
-      <AnimatePresence>
-        {selectedComputer && (
-          <motion.div
-            className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              variants={modal}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="bg-white rounded-2xl shadow-2xl p-6 w-[420px] relative"
-            >
-              <motion.button
-                whileHover={{ rotate: 90, scale: 1.2 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setSelectedComputer(null)}
-                className="absolute top-3 right-3 text-gray-500 hover:text-red-500"
-              >
-                <X size={20} />
-              </motion.button>
-
-              <h2 className="text-center text-lg font-semibold mb-2">
-                Histórico do Computador
-              </h2>
-
-              <p
-                className={`text-center text-sm mb-4 ${
-                  selectedComputer.motivoSaida === "Manutenção"
-                    ? "text-yellow-600"
-                    : "text-red-600"
-                }`}
-              >
-                Status: {selectedComputer.motivoSaida}
-              </p>
-
-              <motion.div
-                className="flex justify-center mb-4"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1 }}
-              >
-                <Image
-                  src={getImage(selectedComputer.tipo)}
-                  alt={selectedComputer.tipo}
-                  width={200}
-                  height={150}
-                  className="object-contain"
-                />
-              </motion.div>
-
-              <div className="text-sm space-y-1">
-                <p><strong>Computador:</strong> {selectedComputer.nome}</p>
-                <p><strong>Tipo:</strong> {selectedComputer.tipo}</p>
-                <p><strong>Tombo:</strong> {selectedComputer.tombo}</p>
-                <p><strong>Problema:</strong> {selectedComputer.Problema}</p>
-                <p><strong>MAC:</strong> {selectedComputer.mac}</p>
-                <p><strong>Status:</strong> {selectedComputer.status}</p>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 };
