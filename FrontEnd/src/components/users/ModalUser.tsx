@@ -1,4 +1,4 @@
-import { insertUsers, updateUsers } from "@/actions/userAction";
+// use fetch to call the app API routes for file uploads
 import { addUserHistory, type UserHistWithActor } from "@/actions/historyAction";
 import { User } from "@/types/types";
 import { X } from "lucide-react";
@@ -25,6 +25,7 @@ const ModalUser = ({showModal, editingUser, user, getUsers}:Props) => {
   
   // NOVO: State para guardar o arquivo da imagem selecionada
   const [image, setImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const { user: actor } = useUser();
 
   useEffect(() => {
@@ -36,21 +37,30 @@ const ModalUser = ({showModal, editingUser, user, getUsers}:Props) => {
       setStatus(user.status_user === 1? "Ativo": "Desativado");
   setPrevStatus(user.status_user ?? null);
       setRePassword(user.reset_password === 1? true : false);
-      // Não setamos a imagem aqui, pois o input de arquivo é 'uncontrolled'
-      // O usuário terá que selecionar uma nova imagem se quiser alterar.
+      // Se houver uma imagem existente do usuário, mostre como preview
+      const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+      if (user.path_img) {
+        setImagePreview(user.path_img.startsWith("http") ? user.path_img : `/api/uploads?path=${encodeURIComponent(user.path_img)}`);
+      } else {
+        setImagePreview(null);
+      }
     }
   }, [editingUser, user]) // Adicionado dependências ao useEffect
 
   // NOVO: Handler para capturar a seleção do arquivo
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setImage(e.target.files[0]);
+      const f = e.target.files[0];
+      setImage(f);
+      // cria preview temporário
+      const url = URL.createObjectURL(f);
+      setImagePreview(url);
     } else {
       setImage(null);
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = async () => {
     
     // MODIFICADO: A lógica agora usa FormData em vez de um objeto JSON.
     
@@ -74,11 +84,15 @@ const ModalUser = ({showModal, editingUser, user, getUsers}:Props) => {
       formData.append("reset_password", repassword ? "1" : "0");
       
       // NOVO: Adicionar a imagem se ela existir
-      if (image) {
-        formData.append("avatar", image); // 'avatar' é o nome do campo
-      }
+      if (image) formData.append("avatar", image);
 
-      await insertUsers(formData); // Envia FormData
+      // envia para o route /api/users que encaminha para o backend
+      const resp = await fetch("/api/users", { method: "POST", body: formData });
+      const result = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        alert(result.message || "Erro ao criar usuário");
+        return;
+      }
       // registra criação no histórico (actor se disponível)
       try{
         const entry: Omit<UserHistWithActor, "when"> = {
@@ -126,11 +140,20 @@ const ModalUser = ({showModal, editingUser, user, getUsers}:Props) => {
       }
       
       // NOVO: Adicionar a imagem se ela existir
-      if (image) {
-        formData.append("avatar", image);
-      }
+      if (image) formData.append("avatar", image);
 
-      await updateUsers(formData); // Envia FormData
+      const resp = await fetch("/api/users", { method: "PUT", body: formData });
+      const result = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        alert(result.message || "Erro ao atualizar usuário");
+        console.error('PUT /api/users failed', result);
+        return;
+      }
+      // success - show message if available
+      if (result && result.message) {
+        // small non-blocking feedback
+        console.info('Usuário atualizado:', result.message);
+      }
     }
     
     // Este código é executado para ambos (criação e atualização)
@@ -178,6 +201,19 @@ const ModalUser = ({showModal, editingUser, user, getUsers}:Props) => {
     await getUsers();
     showModal(false);
   };
+
+  // cleanup object URL when modal unmounts or image changes
+  useEffect(() => {
+    return () => {
+      if (imagePreview && image) {
+        try {
+          URL.revokeObjectURL(imagePreview);
+        } catch (e) {
+          // ignore
+        }
+      }
+    };
+  }, [imagePreview, image]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -241,7 +277,14 @@ const ModalUser = ({showModal, editingUser, user, getUsers}:Props) => {
 
           <div className="md:col-span-2 flex flex-col gap-2">
             <label className="text-sm text-gray-600">Foto de Perfil (Opcional)</label>
-            <input id="foto" type="file" accept="image/png, image/jpeg, image/webp" onChange={handleFileChange} className="file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100 cursor-pointer" />
+            <div className="flex items-center gap-4">
+              {imagePreview ? (
+                <img src={imagePreview.startsWith("http") ? imagePreview : imagePreview} alt="preview" className="w-16 h-16 rounded-full object-cover border" />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">No</div>
+              )}
+              <input id="foto" type="file" accept="image/png, image/jpeg, image/webp" onChange={handleFileChange} className="file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100 cursor-pointer" />
+            </div>
           </div>
         </div>
 

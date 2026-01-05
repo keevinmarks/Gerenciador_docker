@@ -26,3 +26,59 @@ export async function GET() {
     return NextResponse.json({ success: false, message: 'Server error' }, { status: 500 });
   }
 }
+
+export async function POST(request: Request) {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('authToken')?.value;
+
+    if (!token) {
+      return NextResponse.json({ success: false, message: 'No token' }, { status: 401 });
+    }
+
+    const contentType = request.headers.get('content-type') || undefined;
+
+    const res = await fetch('http://api:3001/users', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...(contentType ? { 'Content-Type': contentType } : {}),
+      },
+      body: await request.arrayBuffer(),
+    });
+
+    const json = await res.json().catch(() => ({}));
+    return NextResponse.json(json, { status: res.status });
+  } catch (error) {
+    console.error('Error POST /api/users:', error);
+    return NextResponse.json({ success: false, message: 'Server error' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('authToken')?.value;
+
+    if (!token) {
+      return NextResponse.json({ success: false, message: 'No token' }, { status: 401 });
+    }
+
+    const contentType = request.headers.get('content-type') || undefined;
+
+    const res = await fetch('http://api:3001/users', {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...(contentType ? { 'Content-Type': contentType } : {}),
+      },
+      body: await request.arrayBuffer(),
+    });
+
+    const json = await res.json().catch(() => ({}));
+    return NextResponse.json(json, { status: res.status });
+  } catch (error) {
+    console.error('Error PUT /api/users:', error);
+    return NextResponse.json({ success: false, message: 'Server error' }, { status: 500 });
+  }
+}

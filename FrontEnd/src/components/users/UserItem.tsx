@@ -70,7 +70,7 @@ const UserItem = ({ user, getUsers }: Props) => {
         <Image
           src={
             user.path_img
-              ? `http://localhost:3001/${user.path_img}`
+              ? (user.path_img.startsWith("http") ? user.path_img : `/api/uploads?path=${encodeURIComponent(user.path_img)}`)
               : "/images/default.jpg"
           }
           width={40}

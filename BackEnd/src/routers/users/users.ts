@@ -228,6 +228,13 @@ usersRouter.put("/",upload.single("avatar"), async (req, res) => {
                 sqlParams.push(passwordEncrypted); // Adiciona o valor nos parâmetros
             }
 
+            // 2.b Se um arquivo foi enviado, atualize também path_img
+            if (req.file) {
+                const imgPath = `uploads/${req.file.filename}`;
+                sqlQuery += ", path_img = ?";
+                sqlParams.push(imgPath);
+            }
+
             // 3. Adicione o WHERE no final (sempre necessário)
             sqlQuery += " WHERE id = ?";
             sqlParams.push(id);
