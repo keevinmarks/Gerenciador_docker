@@ -38,7 +38,6 @@ const ModalUser = ({showModal, editingUser, user, getUsers}:Props) => {
   setPrevStatus(user.status_user ?? null);
       setRePassword(user.reset_password === 1? true : false);
       // Se houver uma imagem existente do usuário, mostre como preview
-      const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
       if (user.path_img) {
         setImagePreview(user.path_img.startsWith("http") ? user.path_img : `/api/uploads?path=${encodeURIComponent(user.path_img)}`);
       } else {
@@ -146,14 +145,12 @@ const ModalUser = ({showModal, editingUser, user, getUsers}:Props) => {
       const result = await resp.json().catch(() => ({}));
       if (!resp.ok) {
         alert(result.message || "Erro ao atualizar usuário");
-        console.error('PUT /api/users failed', result);
+        console.error('PUT /api/users failed', resp.status, result);
         return;
       }
-      // success - show message if available
-      if (result && result.message) {
-        // small non-blocking feedback
-        console.info('Usuário atualizado:', result.message);
-      }
+      // success - show a confirmation and continue
+      console.info('PUT /api/users success', resp.status, result);
+      if (result && result.message) alert(result.message);
     }
     
     // Este código é executado para ambos (criação e atualização)
@@ -207,10 +204,10 @@ const ModalUser = ({showModal, editingUser, user, getUsers}:Props) => {
     return () => {
       if (imagePreview && image) {
         try {
-          URL.revokeObjectURL(imagePreview);
-        } catch (e) {
-          // ignore
-        }
+            URL.revokeObjectURL(imagePreview);
+          } catch {
+            // ignore
+          }
       }
     };
   }, [imagePreview, image]);
@@ -283,7 +280,7 @@ const ModalUser = ({showModal, editingUser, user, getUsers}:Props) => {
               ) : (
                 <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">No</div>
               )}
-              <input id="foto" type="file" accept="image/png, image/jpeg, image/webp" onChange={handleFileChange} className="file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100 cursor-pointer" />
+              <input id="foto" type="file" accept="image/*" onChange={handleFileChange} className="file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100 cursor-pointer" />
             </div>
           </div>
         </div>

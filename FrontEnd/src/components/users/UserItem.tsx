@@ -2,7 +2,7 @@
 
 import { User } from "@/types/types";
 import { Pencil, Trash, Plus } from "lucide-react";
-import Image from "next/image";
+// use regular <img> to preserve animated GIFs
 import { useState } from "react";
 import ModalUser from "./ModalUser";
 import ShowModalDelete from "./ShowModalDelete";
@@ -67,7 +67,7 @@ const UserItem = ({ user, getUsers }: Props) => {
   return (
     <>
       <motion.td initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} className="py-2 px-3">
-        <Image
+        <img
           src={
             user.path_img
               ? (user.path_img.startsWith("http") ? user.path_img : `/api/uploads?path=${encodeURIComponent(user.path_img)}`)
@@ -77,7 +77,6 @@ const UserItem = ({ user, getUsers }: Props) => {
           height={40}
           alt="Foto_perfil"
           className="rounded-full object-cover"
-          unoptimized={!!user.path_img}
         />
       </motion.td>
 

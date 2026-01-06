@@ -37,7 +37,7 @@ const userSchema = z.object({
 });
 
 const updateSchema = z.object({
-    id: z.number().int().positive({message: "O id deve ser um numero inteiro positivo"}),
+    id: z.coerce.number().int().positive({message: "O id deve ser um numero inteiro positivo"}),
     user_name: z.string().min(2, {message: "O nome deve conter pelos menos dois caracteres"}),
     position: z.string().min(2, {message: "A posição deve conter pelos menos dois caracteres"}),
     email_user: z.email({message: "Email inválido"}).nullable(),

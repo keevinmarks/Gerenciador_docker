@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { motion, type Variants } from "framer-motion";
-import { getComputerHistory, getPrinterHistory, getUserHistory } from "@/actions/historyAction";
 
 type UnifiedHist = {
   id?: string | number | null;
@@ -17,6 +16,7 @@ type UnifiedHist = {
   action?: string | null;
   actorName?: string | null;
   when: string;
+  image?: string | null;
 };
 
 /* ======================
@@ -60,64 +60,61 @@ const ComputerList = () => {
   const [merged, setMerged] = useState<UnifiedHist[]>([]);
 
   useEffect(() => {
-    const cs = getComputerHistory();
-    const ps = getPrinterHistory();
+    let mounted = true;
 
-    const us = getUserHistory();
+    const load = async () => {
+      try {
+        const res = await fetch('/api/history');
+        const arr = (await res.json().catch(() => [])) as unknown[];
 
-    const mappedComputers: UnifiedHist[] = cs.map((h) => ({
-      id: h.id ?? null,
-      source: "Computador",
-      nome: h.nome ?? "-",
-      tipo: h.tipo ?? "-",
-      mac: h.mac ?? "-",
-      tombo: h.tombo ?? null,
-      problema: h.Problema ?? null,
-      status: h.status ?? "-",
-      motivo: h.motivo ?? null,
-      action: h.action ?? h.motivo ?? null,
-      actorName: h.actorName ?? null,
-      when: h.when ?? new Date().toISOString(),
-    }));
+        const mapped: UnifiedHist[] = (arr || []).map((it: unknown) => {
+          const item = it as Record<string, unknown>;
+          const source = typeof item.source === 'string' ? (item.source as UnifiedHist['source']) : 'Computador';
+          const when = typeof item.when === 'string' ? item.when : new Date().toISOString();
+          const entry = (item.entry as Record<string, unknown>) ?? {};
 
-    const mappedPrinters: UnifiedHist[] = ps.map((h) => ({
-      id: h.id ?? null,
-      source: "Impressora",
-      nome: h.nome ?? "-",
-      tipo: h.tipo ?? "-",
-      mac: h.mac ?? "-",
-      tombo: h.tombo ?? null,
-      problema: h.Problema ?? null,
-      status: h.status ?? "-",
-      motivo: h.motivo ?? null,
-      action: h.action ?? h.motivo ?? null,
-      actorName: h.actorName ?? null,
-      when: h.when ?? new Date().toISOString(),
-    }));
+          const id = typeof entry.id === 'string' || typeof entry.id === 'number' ? entry.id : null;
+          const nome = typeof entry.nome === 'string' ? entry.nome : typeof entry.name === 'string' ? entry.name : '-';
+          const tipo = typeof entry.tipo === 'string' ? entry.tipo : typeof entry.type === 'string' ? entry.type : null;
+          const mac = typeof entry.mac === 'string' ? entry.mac : null;
+          const tombo = typeof entry.tombo === 'string' || typeof entry.tombo === 'number' ? entry.tombo : null;
+          const problema = typeof entry.Problema === 'string' ? entry.Problema : typeof entry.problema === 'string' ? entry.problema : null;
+          const status = typeof entry.status === 'string' ? entry.status : null;
+          const motivo = typeof entry.motivo === 'string' ? entry.motivo : null;
+          const action = typeof entry.action === 'string' ? entry.action : (typeof entry.motivo === 'string' ? entry.motivo : null);
+          const actorName = typeof entry.actorName === 'string' ? entry.actorName : null;
+          const image = typeof entry.image === 'string' ? entry.image : typeof entry.gif === 'string' ? entry.gif : null;
 
-    const mappedUsers: UnifiedHist[] = us.map((h) => ({
-      id: h.id ?? null,
-      source: "Usuário",
-      nome: h.nome ?? "-",
-      tipo: null,
-      mac: null,
-      tombo: null,
-      problema: null,
-      status: h.status ?? "-",
-      motivo: h.motivo ?? null,
-      action: h.action ?? h.motivo ?? null,
-      actorName: h.actorName ?? null,
-      when: h.when ?? new Date().toISOString(),
-    }));
+          return {
+            id,
+            source,
+            nome,
+            tipo,
+            mac,
+            tombo,
+            problema,
+            status,
+            motivo,
+            action,
+            actorName,
+            image,
+            when,
+          } as UnifiedHist;
+        });
 
-    const combined = [...mappedComputers, ...mappedPrinters, ...mappedUsers].sort((a, b) => {
-      const ta = new Date(a.when).getTime();
-      const tb = new Date(b.when).getTime();
-      return tb - ta;
-    });
+        const combined = mapped.sort((a, b) => new Date(b.when).getTime() - new Date(a.when).getTime());
+        if (mounted) setMerged(combined);
+      } catch (err) {
+        console.error('Failed to load history', err);
+        if (mounted) setMerged([]);
+      }
+    };
 
-    // keep only merged timeline
-    setMerged(combined);
+    void load();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   // read-only history page — images not used here
@@ -166,7 +163,7 @@ const ComputerList = () => {
     >
       <motion.div className="flex items-center justify-between mb-4" variants={fadeUp}>
         <div>
-          <h1 className="text-3xl font-bold">Histórico Unificado</h1>
+          <h1 className="text-3xl font-bold">Histórico de Tudo</h1>
           <p className="text-sm text-gray-600">Registro imutável de ações no sistema.</p>
         </div>
 
@@ -243,6 +240,11 @@ const ComputerList = () => {
                       {r.mac ? <div>MAC: {r.mac}</div> : null}
                       {r.tombo ? <div>Tombo: {r.tombo}</div> : null}
                       {r.status ? <div>Status: {r.status}</div> : null}
+                      {r.image ? (
+                        <div className="mt-2">
+                          <img src={r.image} alt="preview" className="max-h-24 rounded-md border" />
+                        </div>
+                      ) : null}
                     </div>
                   </td>
                   <td className="py-3 px-4 align-top">{r.actorName ?? "-"}</td>

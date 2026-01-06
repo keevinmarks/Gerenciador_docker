@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, ReactNode } from "react";
-import Image from "next/image";
+// use <img> for avatars to preserve animated GIFs
 import Link from "next/link";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import ButtonLogoff from "@/components/system/ButtonLogoff";
@@ -153,7 +153,7 @@ export default function Layout({ children }: Props) {
     },
     { 
       label: "Máquina na Rede", 
-      href: "/system/maquinanarede", 
+      href: "/system/telademanutencao", 
       icon: Wifi 
     },
     { 
@@ -218,18 +218,17 @@ export default function Layout({ children }: Props) {
               onClick={() => setIsMenuOpen((prev) => !prev)}
               className="flex items-center gap-3 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 transition-all duration-300 group"
             >
-              <div className="relative">
-                <Image
+                <div className="relative">
+                <img
                   src={
-                    user?.path_img 
-                      ? `http://api:3001/${user.path_img}` 
+                    user?.path_img
+                      ? (user.path_img.startsWith("http") ? user.path_img : `/api/uploads?path=${encodeURIComponent(user.path_img)}`)
                       : "/images/default.jpg"
                   }
                   width={36}
                   height={36}
                   alt="Perfil"
                   className="rounded-full object-cover border-2 border-white/30"
-                  unoptimized={!!user?.path_img}
                 />
                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-white" />
               </div>
@@ -261,17 +260,16 @@ export default function Layout({ children }: Props) {
                   {/* User Info Card */}
                   <div className="px-6 py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-b border-slate-200">
                     <div className="flex items-center gap-4">
-                      <Image
+                      <img
                         src={
-                          user?.path_img 
-                            ? `http://api:3001/${user.path_img}` 
+                          user?.path_img
+                            ? (user.path_img.startsWith("http") ? user.path_img : `/api/uploads?path=${encodeURIComponent(user.path_img)}`)
                             : "/images/default.jpg"
                         }
                         width={48}
                         height={48}
                         alt="Perfil"
                         className="rounded-full object-cover border-3 border-white/30"
-                        unoptimized={!!user?.path_img}
                       />
                       <div>
                         <p className="font-bold text-lg">{displayName}</p>

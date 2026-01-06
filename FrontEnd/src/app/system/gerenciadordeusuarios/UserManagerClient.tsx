@@ -91,7 +91,6 @@ export default function UserManagerClient({ initialUsers }: Props) {
     if (!initialUsers || initialUsers.length === 0) {
       getUsersList();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialUsers]);
 
   return (

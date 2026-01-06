@@ -87,17 +87,16 @@ export default function WelcomeModal({
                 className="flex justify-center mb-6"
               >
                 <div className="relative">
-                  <Image
+                  <img
                     src={
                       userImage
-                        ? `http://api:3001/${userImage}`
+                        ? (userImage.startsWith("http") ? userImage : `/api/uploads?path=${encodeURIComponent(userImage)}`)
                         : "/images/default.jpg"
                     }
                     width={80}
                     height={80}
                     alt="Perfil"
                     className="rounded-full object-cover border-4 border-blue-500 shadow-lg"
-                    unoptimized={!!userImage}
                   />
                   <motion.div
                     animate={{ scale: [1, 1.2, 1] }}

@@ -45,44 +45,107 @@ const safeParse = <T>(v: string | null): T[] => {
   }
 };
 
-export const addComputerHistory = (entry: Omit<ComputerHist, "when">) => {
-  if (typeof window === "undefined") return;
-  const raw = localStorage.getItem(KEY_COMPUTERS);
-  const arr = safeParse<ComputerHist>(raw);
-  arr.unshift({ ...entry, when: new Date().toISOString() });
-  localStorage.setItem(KEY_COMPUTERS, JSON.stringify(arr.slice(0, 500)));
+const API_HISTORY = "/api/history";
+type HistoryApiRecord = {
+  source: string;
+  entry: Record<string, unknown>;
+  when: string;
 };
 
-export const getComputerHistory = (): ComputerHist[] => {
+type HistoryPostPayload = {
+  source: string;
+  entry: Record<string, unknown>;
+};
+
+async function fetchHistoryFromApi(): Promise<HistoryApiRecord[]> {
+  try {
+    const res = await fetch(API_HISTORY, { cache: "no-store" });
+    if (!res.ok) throw new Error("api history fetch failed");
+    const json = await res.json();
+    return Array.isArray(json) ? (json as HistoryApiRecord[]) : (json.data ?? []);
+  } catch (err) {
+    console.warn("fetchHistoryFromApi error:", err);
+    return [];
+  }
+}
+
+async function postHistoryToApi(payload: HistoryPostPayload): Promise<boolean> {
+  try {
+    const res = await fetch(API_HISTORY, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    return res.ok;
+  } catch (err) {
+    console.warn("postHistoryToApi error:", err);
+    return false;
+  }
+}
+
+export const addComputerHistory = async (entry: Omit<ComputerHist, "when">) => {
+  if (typeof window === "undefined") return;
+  const payload = { source: "Computador", entry: { ...entry } };
+  const ok = await postHistoryToApi(payload);
+  if (!ok) {
+    // fallback localStorage
+    const raw = localStorage.getItem(KEY_COMPUTERS);
+    const arr = safeParse<ComputerHist>(raw);
+    arr.unshift({ ...entry, when: new Date().toISOString() });
+    localStorage.setItem(KEY_COMPUTERS, JSON.stringify(arr.slice(0, 500)));
+  }
+};
+
+export const getComputerHistory = async (): Promise<ComputerHist[]> => {
   if (typeof window === "undefined") return [];
+  const api = await fetchHistoryFromApi();
+  if (api && api.length > 0) {
+    return api.filter((x) => x.source === "Computador").map((i) => ({ ...(i.entry || i), when: i.when }));
+  }
   return safeParse<ComputerHist>(localStorage.getItem(KEY_COMPUTERS));
 };
 
-export const addPrinterHistory = (entry: Omit<PrinterHist, "when">) => {
+export const addPrinterHistory = async (entry: Omit<PrinterHist, "when">) => {
   if (typeof window === "undefined") return;
-  const raw = localStorage.getItem(KEY_PRINTERS);
-  const arr = safeParse<PrinterHist>(raw);
-  arr.unshift({ ...entry, when: new Date().toISOString() });
-  localStorage.setItem(KEY_PRINTERS, JSON.stringify(arr.slice(0, 500)));
+  const payload = { source: "Impressora", entry: { ...entry } };
+  const ok = await postHistoryToApi(payload);
+  if (!ok) {
+    const raw = localStorage.getItem(KEY_PRINTERS);
+    const arr = safeParse<PrinterHist>(raw);
+    arr.unshift({ ...entry, when: new Date().toISOString() });
+    localStorage.setItem(KEY_PRINTERS, JSON.stringify(arr.slice(0, 500)));
+  }
 };
 
-export const getPrinterHistory = (): PrinterHist[] => {
+export const getPrinterHistory = async (): Promise<PrinterHist[]> => {
   if (typeof window === "undefined") return [];
+  const api = await fetchHistoryFromApi();
+  if (api && api.length > 0) {
+    return api.filter((x) => x.source === "Impressora").map((i) => ({ ...(i.entry || i), when: i.when }));
+  }
   return safeParse<PrinterHist>(localStorage.getItem(KEY_PRINTERS));
 };
 
 const KEY_USERS = "history_users_v1";
 
-export const addUserHistory = (entry: Omit<UserHistWithActor, "when">) => {
+export const addUserHistory = async (entry: Omit<UserHistWithActor, "when">) => {
   if (typeof window === "undefined") return;
-  const raw = localStorage.getItem(KEY_USERS);
-  const arr = safeParse<UserHistWithActor>(raw);
-  arr.unshift({ ...entry, when: new Date().toISOString() });
-  localStorage.setItem(KEY_USERS, JSON.stringify(arr.slice(0, 500)));
+  const payload = { source: "Usuário", entry: { ...entry } };
+  const ok = await postHistoryToApi(payload);
+  if (!ok) {
+    const raw = localStorage.getItem(KEY_USERS);
+    const arr = safeParse<UserHistWithActor>(raw);
+    arr.unshift({ ...entry, when: new Date().toISOString() });
+    localStorage.setItem(KEY_USERS, JSON.stringify(arr.slice(0, 500)));
+  }
 };
 
-export const getUserHistory = (): UserHistWithActor[] => {
+export const getUserHistory = async (): Promise<UserHistWithActor[]> => {
   if (typeof window === "undefined") return [];
+  const api = await fetchHistoryFromApi();
+  if (api && api.length > 0) {
+    return api.filter((x) => x.source === "Usuário").map((i) => ({ ...(i.entry || i), when: i.when }));
+  }
   return safeParse<UserHistWithActor>(localStorage.getItem(KEY_USERS));
 };
 

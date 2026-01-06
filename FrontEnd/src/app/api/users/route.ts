@@ -37,14 +37,17 @@ export async function POST(request: Request) {
     }
 
     const contentType = request.headers.get('content-type') || undefined;
+    const contentLength = request.headers.get('content-length') || undefined;
+    console.info('Proxy POST /api/users content-type=', contentType, 'content-length=', contentLength);
 
+    const bodyBuffer = await request.arrayBuffer();
     const res = await fetch('http://api:3001/users', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
         ...(contentType ? { 'Content-Type': contentType } : {}),
       },
-      body: await request.arrayBuffer(),
+      body: bodyBuffer,
     });
 
     const json = await res.json().catch(() => ({}));
@@ -65,14 +68,17 @@ export async function PUT(request: Request) {
     }
 
     const contentType = request.headers.get('content-type') || undefined;
+    const contentLength = request.headers.get('content-length') || undefined;
+    console.info('Proxy PUT /api/users content-type=', contentType, 'content-length=', contentLength);
 
+    const bodyBuffer = await request.arrayBuffer();
     const res = await fetch('http://api:3001/users', {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`,
         ...(contentType ? { 'Content-Type': contentType } : {}),
       },
-      body: await request.arrayBuffer(),
+      body: bodyBuffer,
     });
 
     const json = await res.json().catch(() => ({}));

@@ -8,17 +8,53 @@ export default function TutorialCard() {
   const [visible, setVisible] = useState(false);
   const [index, setIndex] = useState(0);
 
-  const slides = [
-    { title: "Adicionar dispositivo", img: "/images/tutorial1.png", desc: "" },
-    { title: "Painel / Estatísticas", img: "/images/tutorial2.png", desc: "" },
-    { title: "Lista de dispositivos", img: "/images/tutorial3.png", desc: "" },
-    { title: "Modal Adicionar", img: "/images/tutorial4.png", desc: "" },
-    { title: "Gerenciamento de Usuários", img: "/images/tutorial5.png", desc: "" },
-    { title: "Cartões resumo", img: "/images/tutorial6.png", desc: "" },
-    { title: "Empty state", img: "/images/tutorial7.png", desc: "" },
-    { title: "Ações de linha", img: "/images/tutorial8.png", desc: "" },
-    { title: "Ajuda e Docs", img: "/images/tutorial9.png", desc: "" },
-  ];
+const slides = [
+  {
+    title: "Painel / Estatísticas",
+    img: "/images/tutorial1.png",
+    desc: "Este é o dashboard, onde são listados os computadores e impressoras ativos e inativos."
+  },
+  {
+    title: "Tela de Adicionar Computador",
+    img: "/images/tutorial2.png",
+    desc: "Nesta tela são exibidos os computadores que você cadastrou no sistema."
+  },
+  {
+    title: "Como Adicionar um Novo Computador",
+    img: "/images/tutorial3.png",
+    desc: "Aqui você pode adicionar um novo computador e descrever o problema identificado."
+  },
+  {
+    title: "Tela de Adicionar Impressora",
+    img: "/images/tutorial4.png",
+    desc: "Nesta tela são exibidas as impressoras que você cadastrou no sistema."
+  },
+  {
+    title: "Como Adicionar uma Nova Impressora",
+    img: "/images/tutorial5.png",
+    desc: "Aqui você pode adicionar uma nova impressora e descrever o problema identificado."
+  },
+  {
+    title: "Usuários",
+    img: "/images/tutorial6.png",
+    desc: "Nesta tela são listados os usuários ativos e desativados para uso do sistema de gerenciamento."
+  },
+  {
+    title: "Como Adicionar um Usuário",
+    img: "/images/tutorial7.png",
+    desc: "Nesta tela é possível criar ou editar usuários. Apenas administradores têm permissão para realizar essas ações."
+  },
+  {
+    title: "Máquinas na Rede",
+    img: "/images/tutorial8.png",
+    desc: "Aqui são exibidas as máquinas — computadores e impressoras — que estão conectadas à rede no momento."
+  },
+  {
+    title: "Histórico de Ações dos Usuários",
+    img: "/images/tutorial9.png",
+    desc: "Esta tela exibe o histórico de ações, mostrando quais usuários realizaram alterações ou exclusões no sistema."
+  },
+];
 
   useEffect(() => {
     const seen = sessionStorage.getItem("homeTutorialSeen");
